@@ -3,12 +3,14 @@
  * //  Copyright (c) 2025 Vanishing Games. All Rights Reserved.
  * @Author: VanishXiao
  * @Date: 2025-07-08 22:38:59
- * @LastEditTime: 2025-07-09 20:01:00
+ * @LastEditTime: 2025-07-09 20:13:41
  * // -----------------------------------------------------------------------------
 -->
 # CodeUnfucker
 
 一个Unity项目的代码辅助工具，提供代码分析和格式化功能。
+
+此仓库,使用Cursor完成.
 
 ## 功能
 
