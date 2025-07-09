@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CodeUnfucker
 {
@@ -40,9 +41,12 @@ namespace CodeUnfucker
                 case "csharpier":
                     FormatCodeWithCSharpier(path);
                     break;
+                case "pure":
+                    AnalyzePurity(path);
+                    break;
                 default:
                     LogError($"未知命令: {command}");
-                    LogError("支持的命令: analyze, format, csharpier");
+                    LogError("支持的命令: analyze, format, csharpier, pure");
                     ShowUsage();
                     break;
             }
@@ -107,6 +111,7 @@ namespace CodeUnfucker
             LogInfo("  analyze    - 分析代码");
             LogInfo("  format     - 使用内置格式化器格式化代码");
             LogInfo("  csharpier  - 使用CSharpier格式化代码");
+            LogInfo("  pure       - 分析 [Pure] 属性建议");
             LogInfo("");
             LogInfo("选项:");
             LogInfo("  --config, -c  - 指定配置文件目录路径");
@@ -115,6 +120,7 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker analyze ./Scripts");
             LogInfo("  CodeUnfucker format ./Scripts --config ./MyConfig");
             LogInfo("  CodeUnfucker csharpier MyFile.cs");
+            LogInfo("  CodeUnfucker pure ./Scripts");
         }
 
         private void SetupConfig(string? configPath)
@@ -310,6 +316,282 @@ namespace CodeUnfucker
             {
                 LogInfo($"  - {reference.Name}");
             }
+        }
+
+        private void AnalyzePurity(string scriptPath)
+        {
+            LogInfo($"开始分析 [Pure] 属性建议，扫描路径: {scriptPath}");
+            var csFiles = GetCsFiles(scriptPath);
+            if (csFiles.Length == 0)
+            {
+                LogWarn("未找到任何 .cs 文件");
+                return;
+            }
+
+            LogInfo($"找到 {csFiles.Length} 个 .cs 文件");
+
+            try
+            {
+                var syntaxTrees = ParseSyntaxTrees(csFiles);
+                var references = GetMetadataReferences();
+                var compilation = CreateCompilation(syntaxTrees, references);
+                
+                var config = PureAnalyzerConfig.LoadFromFile(Path.Combine("Config", "PureAnalyzerConfig.json"));
+                var analyzer = new PureAnalyzer();
+
+                int suggestAddCount = 0;
+                int suggestRemoveCount = 0;
+
+                foreach (var syntaxTree in syntaxTrees)
+                {
+                    var semanticModel = compilation.GetSemanticModel(syntaxTree);
+                    var diagnostics = AnalyzeSyntaxTree(syntaxTree, semanticModel, analyzer, config);
+                    
+                    foreach (var diagnostic in diagnostics)
+                    {
+                        var lineSpan = diagnostic.Location.GetLineSpan();
+                        var fileName = Path.GetFileName(lineSpan.Path);
+                        var line = lineSpan.StartLinePosition.Line + 1;
+                        var column = lineSpan.StartLinePosition.Character + 1;
+
+                        if (diagnostic.Id == PureAnalyzer.SuggestAddPureRule.Id)
+                        {
+                            LogInfo($"✅ {fileName}({line},{column}): {diagnostic.GetMessage()}");
+                            suggestAddCount++;
+                        }
+                        else if (diagnostic.Id == PureAnalyzer.SuggestRemovePureRule.Id)
+                        {
+                            LogWarn($"⚠️  {fileName}({line},{column}): {diagnostic.GetMessage()}");
+                            suggestRemoveCount++;
+                        }
+                    }
+                }
+
+                LogInfo($"");
+                LogInfo($"分析完成！");
+                LogInfo($"建议添加 [Pure]: {suggestAddCount} 个方法");
+                LogInfo($"建议移除 [Pure]: {suggestRemoveCount} 个方法");
+                
+                if (suggestAddCount > 0)
+                {
+                    LogInfo($"可以使用代码修复器自动添加 [Pure] 属性到无副作用的方法");
+                }
+                
+                if (suggestRemoveCount > 0)
+                {
+                    LogWarn($"请检查标记为 [Pure] 但包含副作用的方法");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"分析过程中发生错误: {ex.Message}");
+                LogDebug($"详细错误信息: {ex}");
+            }
+        }
+
+        private List<Diagnostic> AnalyzeSyntaxTree(SyntaxTree syntaxTree, SemanticModel semanticModel, 
+            PureAnalyzer analyzer, PureAnalyzerConfig config)
+        {
+            var diagnostics = new List<Diagnostic>();
+            var root = syntaxTree.GetRoot();
+
+            // 分析方法
+            var methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            foreach (var method in methods)
+            {
+                var methodDiagnostics = AnalyzeMethod(method, semanticModel, config);
+                diagnostics.AddRange(methodDiagnostics);
+            }
+
+            // 分析属性
+            var properties = root.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+            foreach (var property in properties)
+            {
+                var propertyDiagnostics = AnalyzeProperty(property, semanticModel, config);
+                diagnostics.AddRange(propertyDiagnostics);
+            }
+
+            return diagnostics;
+        }
+
+        private List<Diagnostic> AnalyzeMethod(MethodDeclarationSyntax method, SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            var diagnostics = new List<Diagnostic>();
+            
+            if (!config.EnableSuggestAdd && !config.EnableSuggestRemove)
+                return diagnostics;
+
+            // 检查可见性
+            if (!IsTargetAccessibility(method, config))
+                return diagnostics;
+
+            // 检查是否排除 partial 方法
+            if (config.ExcludePartial && method.Modifiers.Any(SyntaxKind.PartialKeyword))
+                return diagnostics;
+
+            var methodSymbol = semanticModel.GetDeclaredSymbol(method);
+            if (methodSymbol == null)
+                return diagnostics;
+
+            bool hasPureAttribute = HasPureAttribute(method);
+            bool shouldBePure = ShouldMethodBePure(method, methodSymbol, semanticModel, config);
+
+            if (config.EnableSuggestAdd && !hasPureAttribute && shouldBePure)
+            {
+                var diagnostic = Diagnostic.Create(
+                    PureAnalyzer.SuggestAddPureRule,
+                    method.Identifier.GetLocation(),
+                    methodSymbol.Name);
+                diagnostics.Add(diagnostic);
+            }
+            else if (config.EnableSuggestRemove && hasPureAttribute && !shouldBePure)
+            {
+                var diagnostic = Diagnostic.Create(
+                    PureAnalyzer.SuggestRemovePureRule,
+                    method.Identifier.GetLocation(),
+                    methodSymbol.Name);
+                diagnostics.Add(diagnostic);
+            }
+
+            return diagnostics;
+        }
+
+        private List<Diagnostic> AnalyzeProperty(PropertyDeclarationSyntax property, SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            var diagnostics = new List<Diagnostic>();
+            
+            if (!config.AllowGetters || !config.EnableSuggestAdd)
+                return diagnostics;
+
+            // 检查可见性
+            if (!IsTargetAccessibility(property, config))
+                return diagnostics;
+
+            var propertySymbol = semanticModel.GetDeclaredSymbol(property);
+            if (propertySymbol == null || propertySymbol.IsWriteOnly)
+                return diagnostics;
+
+            // 检查只读属性是否应该标记为 Pure
+            var getter = property.AccessorList?.Accessors
+                .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
+
+            if (getter?.Body == null && getter?.ExpressionBody == null)
+                return diagnostics; // 自动属性，不需要检查
+
+            bool hasPureAttribute = HasPureAttribute(property);
+            bool shouldBePure = ShouldPropertyBePure(property, propertySymbol, semanticModel, config);
+
+            if (!hasPureAttribute && shouldBePure)
+            {
+                var diagnostic = Diagnostic.Create(
+                    PureAnalyzer.SuggestAddPureRule,
+                    property.Identifier.GetLocation(),
+                    propertySymbol.Name);
+                diagnostics.Add(diagnostic);
+            }
+
+            return diagnostics;
+        }
+
+        private bool IsTargetAccessibility(MemberDeclarationSyntax member, PureAnalyzerConfig config)
+        {
+            var modifiers = member.Modifiers;
+            
+            if (modifiers.Any(SyntaxKind.PublicKeyword) && config.Accessibility.Contains("public"))
+                return true;
+            
+            if (modifiers.Any(SyntaxKind.InternalKeyword) && config.Accessibility.Contains("internal"))
+                return true;
+            
+            if (modifiers.Any(SyntaxKind.ProtectedKeyword) && config.Accessibility.Contains("protected"))
+                return true;
+            
+            if (modifiers.Any(SyntaxKind.PrivateKeyword) && config.Accessibility.Contains("private"))
+                return true;
+
+            // 默认访问级别检查
+            if (!modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || 
+                                    m.IsKind(SyntaxKind.InternalKeyword) || 
+                                    m.IsKind(SyntaxKind.ProtectedKeyword) || 
+                                    m.IsKind(SyntaxKind.PrivateKeyword)))
+            {
+                return config.Accessibility.Contains("internal") || config.Accessibility.Contains("private");
+            }
+
+            return false;
+        }
+
+        private bool HasPureAttribute(MemberDeclarationSyntax member)
+        {
+            return member.AttributeLists
+                .SelectMany(al => al.Attributes)
+                .Any(attr => 
+                {
+                    var name = attr.Name.ToString();
+                    return name == "Pure" || 
+                           name == "System.Diagnostics.Contracts.Pure" ||
+                           name == "PureAttribute" ||
+                           name == "System.Diagnostics.Contracts.PureAttribute";
+                });
+        }
+
+        private bool ShouldMethodBePure(MethodDeclarationSyntax method, IMethodSymbol methodSymbol, 
+            SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            // 检查返回类型
+            if (methodSymbol.ReturnsVoid)
+                return false;
+
+            // 检查方法体
+            if (method.Body == null && method.ExpressionBody == null)
+                return false; // 抽象方法或接口方法
+
+            // 分析方法体是否有副作用
+            var hasSideEffects = HasSideEffects(method, semanticModel, config);
+            return !hasSideEffects;
+        }
+
+        private bool ShouldPropertyBePure(PropertyDeclarationSyntax property, IPropertySymbol propertySymbol, 
+            SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            if (propertySymbol.IsWriteOnly)
+                return false;
+
+            var getter = property.AccessorList?.Accessors
+                .FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration));
+
+            if (getter == null)
+                return false;
+
+            // 分析 getter 是否有副作用
+            var hasSideEffects = HasSideEffectsInAccessor(getter, semanticModel, config);
+            return !hasSideEffects;
+        }
+
+        private bool HasSideEffects(MethodDeclarationSyntax method, SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            var walker = new SideEffectWalker(semanticModel, config);
+            
+            if (method.Body != null)
+                walker.Visit(method.Body);
+            
+            if (method.ExpressionBody != null)
+                walker.Visit(method.ExpressionBody);
+            
+            return walker.HasSideEffects;
+        }
+
+        private bool HasSideEffectsInAccessor(AccessorDeclarationSyntax accessor, SemanticModel semanticModel, PureAnalyzerConfig config)
+        {
+            var walker = new SideEffectWalker(semanticModel, config);
+            
+            if (accessor.Body != null)
+                walker.Visit(accessor.Body);
+            
+            if (accessor.ExpressionBody != null)
+                walker.Visit(accessor.ExpressionBody);
+            
+            return walker.HasSideEffects;
         }
 
 #region LoggingHelpers

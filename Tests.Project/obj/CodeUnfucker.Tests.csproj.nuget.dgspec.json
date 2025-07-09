@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj": {}
+    "/workspace/Tests.Project/CodeUnfucker.Tests.csproj": {}
   },
   "projects": {
-    "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj": {
+    "/workspace/CodeUnfucker.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj",
+        "projectUniqueName": "/workspace/CodeUnfucker.csproj",
         "projectName": "CodeUnfucker",
-        "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj",
-        "packagesPath": "/Users/vanish/.nuget/packages/",
-        "outputPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/obj/",
+        "projectPath": "/workspace/CodeUnfucker.csproj",
+        "packagesPath": "/home/ubuntu/.nuget/packages/",
+        "outputPath": "/workspace/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/vanish/.nuget/NuGet/NuGet.Config"
+          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -82,21 +82,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/9.0.101/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj": {
+    "/workspace/Tests.Project/CodeUnfucker.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
+        "projectUniqueName": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
         "projectName": "CodeUnfucker.Tests",
-        "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
-        "packagesPath": "/Users/vanish/.nuget/packages/",
-        "outputPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/obj/",
+        "projectPath": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
+        "packagesPath": "/home/ubuntu/.nuget/packages/",
+        "outputPath": "/workspace/Tests.Project/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/vanish/.nuget/NuGet/NuGet.Config"
+          "/home/ubuntu/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -108,8 +108,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj": {
-                "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj"
+              "/workspace/CodeUnfucker.csproj": {
+                "projectPath": "/workspace/CodeUnfucker.csproj"
               }
             }
           }
@@ -124,7 +124,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -179,7 +179,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/9.0.101/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

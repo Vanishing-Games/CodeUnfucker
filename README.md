@@ -16,7 +16,8 @@
 
 1. **代码分析** - 静态分析C#代码并输出结果到Unity控制台
 2. **代码格式化** - 按规范重新排列类成员并添加Region宏
-3. **配置系统** - 通过JSON配置文件灵活控制所有功能
+3. **Pure 属性分析** - 自动检测和管理 [Pure] 属性，优化代码纯度标记
+4. **配置系统** - 通过JSON配置文件灵活控制所有功能
 
 ## 使用方法
 
@@ -38,6 +39,9 @@ dotnet run -- format <文件路径或目录路径> [--config <配置文件目录
 
 # 格式化代码（使用CSharpier）
 dotnet run -- csharpier <文件路径或目录路径> [--config <配置文件目录>]
+
+# 分析 Pure 属性建议
+dotnet run -- pure <目录路径> [--config <配置文件目录>]
 
 # 查看帮助
 dotnet run -- help
@@ -62,6 +66,9 @@ dotnet run -- format ./Scripts --config ./MyConfig
 
 # 使用CSharpier格式化单个文件
 dotnet run -- csharpier MyFile.cs
+
+# 分析Pure属性建议
+dotnet run -- pure ./Scripts
 ```
 
 ### Unity Editor集成

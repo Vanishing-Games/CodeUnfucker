@@ -1,0 +1,42 @@
+{
+  "PureAnalyzerSettings": {
+    "Accessibility": ["public", "internal"],
+    "ExcludePartial": true,
+    "AllowGetters": true,
+    "EnableSuggestAdd": true,
+    "EnableSuggestRemove": true,
+    "ExcludedNamespaces": [
+      "UnityEngine",
+      "Unity",
+      "UnityEditor"
+    ],
+    "ExcludedMethods": [
+      "Debug.Log",
+      "Debug.LogWarning",
+      "Debug.LogError",
+      "Console.WriteLine",
+      "Console.Write"
+    ],
+    "UnityApiPatterns": [
+      "transform\\.",
+      "gameObject\\.",
+      "Time\\.",
+      "Input\\.",
+      "Physics\\.",
+      "Rigidbody\\.",
+      "Collider\\.",
+      "Renderer\\.",
+      "Camera\\.",
+      "Light\\.",
+      "Audio\\.",
+      "Animation\\.",
+      "Animator\\.",
+      "Canvas\\.",
+      "UI\\.",
+      "SceneManager\\.",
+      "AssetDatabase\\.",
+      "EditorUtility\\.",
+      "Selection\\."
+    ]
+  }
+}
