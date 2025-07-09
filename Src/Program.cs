@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CodeUnfucker
 {
@@ -162,6 +163,8 @@ namespace CodeUnfucker
         {
             var config = ConfigManager.GetAnalyzerConfig();
             LogInfo($"开始分析代码，扫描路径: {scriptPath}");
+            
+            var startTime = DateTime.Now;
             var csFiles = GetCsFiles(scriptPath);
             if (csFiles.Length == 0)
             {
@@ -174,23 +177,406 @@ namespace CodeUnfucker
                 LogInfo($"找到 {csFiles.Length} 个 .cs 文件");
             }
 
+            int totalIssues = 0;
+            var diagnosticCount = new Dictionary<string, int>();
+
             if (config.AnalyzerSettings.EnableSyntaxAnalysis)
             {
                 var syntaxTrees = ParseSyntaxTrees(csFiles);
+                
                 if (config.AnalyzerSettings.EnableSemanticAnalysis)
                 {
                     var references = GetMetadataReferences();
                     var compilation = CreateCompilation(syntaxTrees, references);
+                    
                     if (config.AnalyzerSettings.ShowReferencedAssemblies)
                     {
                         LogReferencedAssemblies(compilation);
                     }
+
+                    // 获取编译诊断信息
+                    if (config.AnalyzerSettings.EnableDiagnostics)
+                    {
+                        var diagnostics = compilation.GetDiagnostics();
+                        totalIssues += ProcessDiagnostics(diagnostics, diagnosticCount, config);
+                    }
+
+                    // 执行静态分析规则
+                    if (config.StaticAnalysisRules.CheckNamingConventions ||
+                        config.StaticAnalysisRules.CheckCodeComplexity ||
+                        config.StaticAnalysisRules.CheckUnusedVariables ||
+                        config.StaticAnalysisRules.CheckDocumentationComments)
+                    {
+                        totalIssues += PerformStaticAnalysis(compilation, config);
+                    }
+                }
+                else
+                {
+                    // 只进行语法分析
+                    totalIssues += PerformSyntaxAnalysis(syntaxTrees, config);
                 }
             }
             else
             {
                 LogInfo("语法分析已禁用，跳过分析步骤");
             }
+
+            // 输出分析结果摘要
+            LogInfo("");
+            LogInfo("=== 分析结果摘要 ===");
+            LogInfo($"分析文件数: {csFiles.Length}");
+            LogInfo($"发现问题数: {totalIssues}");
+            
+            if (diagnosticCount.Any())
+            {
+                LogInfo("问题分类:");
+                foreach (var kvp in diagnosticCount.OrderByDescending(x => x.Value))
+                {
+                    LogInfo($"  {kvp.Key}: {kvp.Value}");
+                }
+            }
+
+            if (config.OutputSettings.ShowProcessingTime)
+            {
+                var elapsed = DateTime.Now - startTime;
+                LogInfo($"分析耗时: {elapsed.TotalMilliseconds:F0} ms");
+            }
+
+            LogInfo("===================");
+        }
+
+        private int ProcessDiagnostics(IEnumerable<Diagnostic> diagnostics, Dictionary<string, int> diagnosticCount, AnalyzerConfig config)
+        {
+            int count = 0;
+            var diagnosticsByFile = diagnostics.GroupBy(d => d.Location.SourceTree?.FilePath ?? "Unknown");
+
+            foreach (var fileGroup in diagnosticsByFile)
+            {
+                var fileName = Path.GetFileName(fileGroup.Key);
+                var fileDiagnostics = fileGroup.ToList();
+                
+                if (fileDiagnostics.Any())
+                {
+                    LogInfo($"\n文件: {fileName}");
+                }
+
+                foreach (var diagnostic in fileDiagnostics)
+                {
+                    count++;
+                    string category = GetDiagnosticCategory(diagnostic.Severity);
+                    diagnosticCount[category] = diagnosticCount.GetValueOrDefault(category, 0) + 1;
+
+                    var location = diagnostic.Location.GetLineSpan();
+                    var message = $"  [{diagnostic.Severity}] {diagnostic.Id}: {diagnostic.GetMessage()}";
+                    
+                    if (location.IsValid)
+                    {
+                        message += $" (行 {location.StartLinePosition.Line + 1})";
+                    }
+
+                    if (diagnostic.Severity == DiagnosticSeverity.Error)
+                    {
+                        LogError(message);
+                    }
+                    else if (diagnostic.Severity == DiagnosticSeverity.Warning)
+                    {
+                        LogWarn(message);
+                    }
+                    else
+                    {
+                        LogInfo(message);
+                    }
+
+                    if (config.OutputSettings.ShowDetailedErrors && !string.IsNullOrEmpty(diagnostic.Descriptor.HelpLinkUri))
+                    {
+                        LogInfo($"    详细信息: {diagnostic.Descriptor.HelpLinkUri}");
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        private string GetDiagnosticCategory(DiagnosticSeverity severity)
+        {
+            return severity switch
+            {
+                DiagnosticSeverity.Error => "错误",
+                DiagnosticSeverity.Warning => "警告",
+                DiagnosticSeverity.Info => "信息",
+                DiagnosticSeverity.Hidden => "隐藏",
+                _ => "其他"
+            };
+        }
+
+        private int PerformSyntaxAnalysis(List<SyntaxTree> syntaxTrees, AnalyzerConfig config)
+        {
+            int issueCount = 0;
+            LogInfo("\n=== 语法分析 ===");
+
+            foreach (var tree in syntaxTrees)
+            {
+                var root = tree.GetRoot();
+                var fileName = Path.GetFileName(tree.FilePath);
+
+                if (config.StaticAnalysisRules.CheckNamingConventions)
+                {
+                    issueCount += CheckNamingConventions(root, fileName);
+                }
+
+                if (config.StaticAnalysisRules.CheckCodeComplexity)
+                {
+                    issueCount += CheckCodeComplexity(root, fileName, config.StaticAnalysisRules.MaxComplexityThreshold);
+                }
+            }
+
+            return issueCount;
+        }
+
+        private int PerformStaticAnalysis(CSharpCompilation compilation, AnalyzerConfig config)
+        {
+            int issueCount = 0;
+            LogInfo("\n=== 静态分析 ===");
+
+            foreach (var tree in compilation.SyntaxTrees)
+            {
+                var root = tree.GetRoot();
+                var semanticModel = compilation.GetSemanticModel(tree);
+                var fileName = Path.GetFileName(tree.FilePath);
+
+                if (config.StaticAnalysisRules.CheckNamingConventions)
+                {
+                    issueCount += CheckNamingConventions(root, fileName);
+                }
+
+                if (config.StaticAnalysisRules.CheckCodeComplexity)
+                {
+                    issueCount += CheckCodeComplexity(root, fileName, config.StaticAnalysisRules.MaxComplexityThreshold);
+                }
+
+                if (config.StaticAnalysisRules.CheckUnusedVariables)
+                {
+                    issueCount += CheckUnusedVariables(root, semanticModel, fileName);
+                }
+
+                if (config.StaticAnalysisRules.CheckDocumentationComments)
+                {
+                    issueCount += CheckDocumentationComments(root, fileName);
+                }
+            }
+
+            return issueCount;
+        }
+
+        private int CheckNamingConventions(SyntaxNode root, string fileName)
+        {
+            int issueCount = 0;
+            var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+            var methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            var fields = root.DescendantNodes().OfType<FieldDeclarationSyntax>();
+            var properties = root.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+
+            // 检查类名命名约定（应该使用PascalCase）
+            foreach (var classDecl in classes)
+            {
+                var className = classDecl.Identifier.ValueText;
+                if (!IsPascalCase(className))
+                {
+                    LogWarn($"  [命名约定] 类名 '{className}' 应使用 PascalCase 命名 ({fileName})");
+                    issueCount++;
+                }
+            }
+
+            // 检查方法命名约定（应该使用PascalCase）
+            foreach (var method in methods)
+            {
+                var methodName = method.Identifier.ValueText;
+                if (!IsPascalCase(methodName) && !IsUnityLifecycleMethod(methodName))
+                {
+                    LogWarn($"  [命名约定] 方法名 '{methodName}' 应使用 PascalCase 命名 ({fileName})");
+                    issueCount++;
+                }
+            }
+
+            // 检查字段命名约定（私有字段应使用camelCase或_camelCase）
+            foreach (var field in fields)
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    var fieldName = variable.Identifier.ValueText;
+                    var isPrivate = field.Modifiers.Any(m => m.IsKind(SyntaxKind.PrivateKeyword)) || 
+                                   !field.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || 
+                                                             m.IsKind(SyntaxKind.ProtectedKeyword) || 
+                                                             m.IsKind(SyntaxKind.InternalKeyword));
+                    
+                    if (isPrivate && !IsCamelCase(fieldName) && !fieldName.StartsWith("_"))
+                    {
+                        LogWarn($"  [命名约定] 私有字段 '{fieldName}' 应使用 camelCase 或 _camelCase 命名 ({fileName})");
+                        issueCount++;
+                    }
+                    else if (!isPrivate && !IsPascalCase(fieldName))
+                    {
+                        LogWarn($"  [命名约定] 公有字段 '{fieldName}' 应使用 PascalCase 命名 ({fileName})");
+                        issueCount++;
+                    }
+                }
+            }
+
+            // 检查属性命名约定（应该使用PascalCase）
+            foreach (var property in properties)
+            {
+                var propertyName = property.Identifier.ValueText;
+                if (!IsPascalCase(propertyName))
+                {
+                    LogWarn($"  [命名约定] 属性名 '{propertyName}' 应使用 PascalCase 命名 ({fileName})");
+                    issueCount++;
+                }
+            }
+
+            return issueCount;
+        }
+
+        private int CheckCodeComplexity(SyntaxNode root, string fileName, int threshold)
+        {
+            int issueCount = 0;
+            var methods = root.DescendantNodes().OfType<MethodDeclarationSyntax>();
+
+            foreach (var method in methods)
+            {
+                var complexity = CalculateCyclomaticComplexity(method);
+                if (complexity > threshold)
+                {
+                    var methodName = method.Identifier.ValueText;
+                    LogWarn($"  [复杂度] 方法 '{methodName}' 的圈复杂度为 {complexity}，超过阈值 {threshold} ({fileName})");
+                    issueCount++;
+                }
+            }
+
+            return issueCount;
+        }
+
+        private int CheckUnusedVariables(SyntaxNode root, SemanticModel semanticModel, string fileName)
+        {
+            int issueCount = 0;
+            var variables = root.DescendantNodes().OfType<VariableDeclaratorSyntax>();
+
+            foreach (var variable in variables)
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(variable);
+                if (symbol is IFieldSymbol fieldSymbol)
+                {
+                    var references = root.DescendantNodes()
+                        .OfType<IdentifierNameSyntax>()
+                        .Where(id => id.Identifier.ValueText == fieldSymbol.Name)
+                        .Count();
+
+                    // 如果只有一个引用（即声明本身），则认为未使用
+                    if (references <= 1)
+                    {
+                        LogWarn($"  [未使用变量] 字段 '{fieldSymbol.Name}' 声明后从未使用 ({fileName})");
+                        issueCount++;
+                    }
+                }
+            }
+
+            return issueCount;
+        }
+
+        private int CheckDocumentationComments(SyntaxNode root, string fileName)
+        {
+            int issueCount = 0;
+            var publicMembers = root.DescendantNodes()
+                .Where(n => n is ClassDeclarationSyntax || n is MethodDeclarationSyntax || n is PropertyDeclarationSyntax)
+                .Where(n => HasPublicModifier(n));
+
+            foreach (var member in publicMembers)
+            {
+                if (!HasDocumentationComment(member))
+                {
+                    var memberName = GetMemberName(member);
+                    var memberType = GetMemberType(member);
+                    LogWarn($"  [文档注释] {memberType} '{memberName}' 缺少 XML 文档注释 ({fileName})");
+                    issueCount++;
+                }
+            }
+
+            return issueCount;
+        }
+
+        // 辅助方法
+        private bool IsPascalCase(string name)
+        {
+            return !string.IsNullOrEmpty(name) && char.IsUpper(name[0]) && !name.Contains('_');
+        }
+
+        private bool IsCamelCase(string name)
+        {
+            return !string.IsNullOrEmpty(name) && char.IsLower(name[0]) && !name.Contains('_');
+        }
+
+        private bool IsUnityLifecycleMethod(string methodName)
+        {
+            var unityMethods = new[] { "Awake", "Start", "Update", "FixedUpdate", "LateUpdate", 
+                                     "OnEnable", "OnDisable", "OnDestroy", "OnGUI", "OnValidate", "Reset" };
+            return unityMethods.Contains(methodName);
+        }
+
+        private int CalculateCyclomaticComplexity(MethodDeclarationSyntax method)
+        {
+            int complexity = 1; // 基础复杂度
+            var controlFlowNodes = method.DescendantNodes().Where(n =>
+                n.IsKind(SyntaxKind.IfStatement) ||
+                n.IsKind(SyntaxKind.ElseClause) ||
+                n.IsKind(SyntaxKind.WhileStatement) ||
+                n.IsKind(SyntaxKind.ForStatement) ||
+                n.IsKind(SyntaxKind.ForEachStatement) ||
+                n.IsKind(SyntaxKind.DoStatement) ||
+                n.IsKind(SyntaxKind.SwitchStatement) ||
+                n.IsKind(SyntaxKind.CaseSwitchLabel) ||
+                n.IsKind(SyntaxKind.CatchClause) ||
+                n.IsKind(SyntaxKind.ConditionalExpression));
+
+            complexity += controlFlowNodes.Count();
+            return complexity;
+        }
+
+        private bool HasPublicModifier(SyntaxNode node)
+        {
+            return node switch
+            {
+                ClassDeclarationSyntax classDecl => classDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)),
+                MethodDeclarationSyntax methodDecl => methodDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)),
+                PropertyDeclarationSyntax propDecl => propDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)),
+                _ => false
+            };
+        }
+
+        private bool HasDocumentationComment(SyntaxNode node)
+        {
+            return node.GetLeadingTrivia().Any(t => t.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) ||
+                                                   t.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia));
+        }
+
+        private string GetMemberName(SyntaxNode node)
+        {
+            return node switch
+            {
+                ClassDeclarationSyntax classDecl => classDecl.Identifier.ValueText,
+                MethodDeclarationSyntax methodDecl => methodDecl.Identifier.ValueText,
+                PropertyDeclarationSyntax propDecl => propDecl.Identifier.ValueText,
+                _ => "Unknown"
+            };
+        }
+
+        private string GetMemberType(SyntaxNode node)
+        {
+            return node switch
+            {
+                ClassDeclarationSyntax => "类",
+                MethodDeclarationSyntax => "方法",
+                PropertyDeclarationSyntax => "属性",
+                _ => "成员"
+            };
         }
 
         private void FormatCode(string path)
