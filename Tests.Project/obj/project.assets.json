@@ -7607,19 +7607,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/vanish/.nuget/packages/": {}
+    "/home/ubuntu/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
+      "projectUniqueName": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
       "projectName": "CodeUnfucker.Tests",
-      "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
-      "packagesPath": "/Users/vanish/.nuget/packages/",
-      "outputPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/obj/",
+      "projectPath": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
+      "packagesPath": "/home/ubuntu/.nuget/packages/",
+      "outputPath": "/workspace/Tests.Project/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/vanish/.nuget/NuGet/NuGet.Config"
+        "/home/ubuntu/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -7631,8 +7631,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj": {
-              "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj"
+            "/workspace/CodeUnfucker.csproj": {
+              "projectPath": "/workspace/CodeUnfucker.csproj"
             }
           }
         }
@@ -7697,12 +7697,22 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.4, 9.0.4]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[9.0.4, 9.0.4]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
