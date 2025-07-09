@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CodeUnfucker
 {
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -48,7 +48,7 @@ namespace CodeUnfucker
             }
         }
 
-        private static bool ValidateArgs(string[] args, out string command, out string path, out string? configPath)
+        public static bool ValidateArgs(string[] args, out string command, out string path, out string? configPath)
         {
             command = string.Empty;
             path = string.Empty;

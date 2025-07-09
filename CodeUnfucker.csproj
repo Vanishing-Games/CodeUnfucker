@@ -5,6 +5,12 @@
     <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>CodeUnfucker.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
     <PackageReference
@@ -20,5 +26,13 @@
     <None Include="Config/*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Remove="Tests.Project/**/*.cs" />
+    <EmbeddedResource Remove="Tests.Project/**/*.cs" />
+    <None Remove="Tests.Project/**/*.cs" />
+    <Compile Remove="TestData/**/*.cs" />
+    <EmbeddedResource Remove="TestData/**/*.cs" />
   </ItemGroup>
 </Project>

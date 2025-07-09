@@ -1,0 +1,41 @@
+{
+  "description": "测试用格式化配置",
+  "version": "1.0.0",
+  "formatterSettings": {
+    "minLinesForRegion": 5,
+    "enableRegionGeneration": true,
+    "createBackupFiles": false,
+    "backupFileExtension": ".test.backup",
+    "formatterType": "Built_in"
+  },
+  "memberOrdering": {
+    "order": [
+      "Public",
+      "UnityLifeCycle", 
+      "Protected",
+      "Private",
+      "NestedClasses",
+      "MemberVariables"
+    ],
+    "description": "测试用成员排序"
+  },
+  "unityLifeCycleMethods": [
+    "Awake",
+    "Start", 
+    "Update",
+    "FixedUpdate",
+    "LateUpdate",
+    "OnEnable",
+    "OnDisable",
+    "OnDestroy"
+  ],
+  "regionSettings": {
+    "publicRegionName": "公有成员",
+    "unityLifeCycleRegionName": "Unity 生命周期",
+    "protectedRegionName": "保护成员", 
+    "privateRegionName": "私有成员",
+    "nestedClassesRegionName": "嵌套类",
+    "memberVariablesRegionName": "成员变量",
+    "indentationSpaces": 8
+  }
+} 

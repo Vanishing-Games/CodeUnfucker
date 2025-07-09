@@ -3,7 +3,7 @@
  * //  Copyright (c) 2025 Vanishing Games. All Rights Reserved.
  * @Author: VanishXiao
  * @Date: 2025-07-08 22:38:59
- * @LastEditTime: 2025-07-09 20:13:41
+ * @LastEditTime: 2025-07-09 20:23:28
  * // -----------------------------------------------------------------------------
 -->
 # CodeUnfucker
@@ -144,6 +144,40 @@ CodeUnfucker使用JSON配置文件来控制所有功能。配置文件位于 `Co
 - 配置文件错误时自动使用默认配置
 - 详细的错误日志和状态信息
 
+## 测试
+
+项目包含完整的单元测试套件，确保代码质量和功能稳定性。
+
+### 快速运行测试
+
+```bash
+# 运行所有测试
+dotnet test
+
+# 使用测试脚本（推荐）
+./run-tests.sh                # Linux/macOS
+run-tests.bat                 # Windows
+
+# 包含代码覆盖率
+./run-tests.sh --coverage
+```
+
+### 测试覆盖
+
+- ✅ **ConfigManager**: 配置文件加载、默认配置、错误处理
+- ✅ **CodeFormatter**: 代码格式化、成员重组、Region生成  
+- ✅ **CSharpierFormatter**: CSharpier集成、错误处理
+- ✅ **Program**: 命令行参数解析、主要业务逻辑
+
+### 测试工具
+
+- **xUnit**: 测试框架
+- **FluentAssertions**: 可读性更强的断言
+- **Coverlet**: 代码覆盖率收集
+- **ReportGenerator**: 覆盖率报告生成
+
+详细的测试指南请查看 [TESTING.md](TESTING.md)。
+
 ## 高级功能
 
 - **灵活的配置路径**: 支持通过 `--config` 参数指定配置文件位置，解决部署后配置文件路径问题
@@ -151,4 +185,5 @@ CodeUnfucker使用JSON配置文件来控制所有功能。配置文件位于 `Co
 - **配置热重载**: 修改配置文件后无需重启
 - **灵活的Region命名**: 可自定义所有Region的名称
 - **可配置的Unity方法检测**: 支持添加新的Unity生命周期方法
-- **详细的日志控制**: 可控制输出的详细程度 
+- **详细的日志控制**: 可控制输出的详细程度
+- **完整的测试套件**: 高覆盖率的单元测试确保代码质量 

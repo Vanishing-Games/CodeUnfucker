@@ -36,8 +36,11 @@ namespace CodeUnfucker
             var tree = CSharpSyntaxTree.ParseText(sourceCode);
             var root = tree.GetCompilationUnitRoot();
             var newRoot = (CompilationUnitSyntax)VisitCompilationUnit(root);
-            return newRoot.NormalizeWhitespace().ToFullString();
+            
+            // 使用 ToFullString() 保留所有注释和格式信息，包括XML文档注释
+            return newRoot.ToFullString();
         }
+
 
         private CompilationUnitSyntax VisitCompilationUnit(CompilationUnitSyntax node)
         {
@@ -82,9 +85,15 @@ namespace CodeUnfucker
                 var regionDirective = SyntaxFactory.RegionDirectiveTrivia(true).WithEndOfDirectiveToken(SyntaxFactory.Token(SyntaxKind.EndOfDirectiveToken).WithLeadingTrivia(SyntaxFactory.Space, SyntaxFactory.PreprocessingMessage(regionName)));
                 var regionTrivia = SyntaxFactory.Trivia(regionDirective);
                 var leadingTrivia = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.Whitespace("        "), regionTrivia, SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.CarriageReturnLineFeed);
-                var firstMember = members.First().WithLeadingTrivia(leadingTrivia);
+                
+                // 保留第一个成员的原始leading trivia（包括XML文档注释），然后添加region指令
+                var firstMember = members.First();
+                var originalLeadingTrivia = firstMember.GetLeadingTrivia();
+                var combinedTrivia = originalLeadingTrivia.AddRange(leadingTrivia);
+                firstMember = firstMember.WithLeadingTrivia(combinedTrivia);
                 newMembers.Add(firstMember);
-                // 添加其余成员
+                
+                // 添加其余成员，保留它们的原始trivia
                 for (int i = 1; i < members.Count; i++)
                 {
                     newMembers.Add(members[i]);
@@ -94,12 +103,15 @@ namespace CodeUnfucker
                 var endRegionDirective = SyntaxFactory.EndRegionDirectiveTrivia(true);
                 var endRegionTrivia = SyntaxFactory.Trivia(endRegionDirective);
                 var endRegionTriviaList = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.Whitespace("        "), endRegionTrivia, SyntaxFactory.CarriageReturnLineFeed);
-                var lastMember = newMembers.Last().WithTrailingTrivia(endRegionTriviaList);
+                var lastMember = newMembers.Last();
+                var originalTrailingTrivia = lastMember.GetTrailingTrivia();
+                var combinedTrailingTrivia = originalTrailingTrivia.AddRange(endRegionTriviaList);
+                lastMember = lastMember.WithTrailingTrivia(combinedTrailingTrivia);
                 newMembers[newMembers.Count - 1] = lastMember;
             }
             else
             {
-                // 如果代码不够长，直接添加成员不使用Region
+                // 如果代码不够长，直接添加成员不使用Region，保留原始trivia
                 newMembers.AddRange(members);
             }
         }

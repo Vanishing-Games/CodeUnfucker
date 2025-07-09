@@ -1,0 +1,34 @@
+{
+  "description": "测试用分析器配置",
+  "version": "1.0.0",
+  "analyzerSettings": {
+    "enableSyntaxAnalysis": true,
+    "enableSemanticAnalysis": true,
+    "enableDiagnostics": true,
+    "showReferencedAssemblies": false,
+    "verboseLogging": false
+  },
+  "fileFilters": {
+    "includePatterns": ["*.cs"],
+    "excludePatterns": [
+      "*.Designer.cs",
+      "*.generated.cs", 
+      "**/bin/**",
+      "**/obj/**"
+    ],
+    "searchSubdirectories": true
+  },
+  "outputSettings": {
+    "logLevel": "Info",
+    "showFileCount": true,
+    "showProcessingTime": false,
+    "showDetailedErrors": true
+  },
+  "staticAnalysisRules": {
+    "checkNamingConventions": false,
+    "checkCodeComplexity": false,
+    "checkUnusedVariables": false,
+    "checkDocumentationComments": false,
+    "maxComplexityThreshold": 5
+  }
+} 
