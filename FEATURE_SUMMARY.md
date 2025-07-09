@@ -45,17 +45,17 @@
 
 ### 单文件处理
 ```bash
-dotnet run -- remove-unused-usings MyFile.cs
+dotnet run -- rmusing MyFile.cs
 ```
 
 ### 目录批量处理
 ```bash
-dotnet run -- remove-unused-usings ./Scripts
+dotnet run -- rmusing ./Scripts
 ```
 
 ### 使用自定义配置
 ```bash
-dotnet run -- remove-unused-usings ./Scripts --config ./MyConfig
+dotnet run -- rmusing ./Scripts --config ./MyConfig
 ```
 
 ## 配置示例
@@ -117,7 +117,7 @@ using UnityEditor;               // ❌ 移除 (未使用)
 ## 集成更新
 
 ### 1. Program.cs 更新
-- 添加`remove-unused-usings`命令
+- 添加`rmusing`命令（简化的移除未使用using语句命令）
 - 更新命令验证逻辑
 - 更新帮助信息和使用示例
 

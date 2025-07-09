@@ -142,6 +142,10 @@ namespace CodeUnfucker.Tests
                 var analyzerConfigField = configManagerType.GetField("_analyzerConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 analyzerConfigField?.SetValue(null, null);
+                
+                var usingRemoverConfigField = configManagerType.GetField("_usingRemoverConfig", 
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                usingRemoverConfigField?.SetValue(null, null);
             }
             catch (Exception ex)
             {

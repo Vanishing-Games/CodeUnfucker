@@ -41,7 +41,7 @@ dotnet run -- format <文件路径或目录路径> [--config <配置文件目录
 dotnet run -- csharpier <文件路径或目录路径> [--config <配置文件目录>]
 
 # 移除未使用的using语句
-dotnet run -- remove-unused-usings <文件路径或目录路径> [--config <配置文件目录>]
+dotnet run -- rmusing <文件路径或目录路径> [--config <配置文件目录>]
 
 # 查看帮助
 dotnet run -- help
@@ -68,10 +68,10 @@ dotnet run -- format ./Scripts --config ./MyConfig
 dotnet run -- csharpier MyFile.cs
 
 # 移除指定目录中所有未使用的using语句
-dotnet run -- remove-unused-usings ./Scripts
+dotnet run -- rmusing ./Scripts
 
 # 移除单个文件中的未使用using语句
-dotnet run -- remove-unused-usings MyFile.cs --config ./MyConfig
+dotnet run -- rmusing MyFile.cs --config ./MyConfig
 ```
 
 ### Unity Editor集成

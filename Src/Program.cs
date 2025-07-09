@@ -40,12 +40,12 @@ namespace CodeUnfucker
                 case "csharpier":
                     FormatCodeWithCSharpier(path);
                     break;
-                case "remove-unused-usings":
+                case "rmusing":
                     RemoveUnusedUsings(path);
                     break;
                 default:
                     LogError($"未知命令: {command}");
-                    LogError("支持的命令: analyze, format, csharpier, remove-unused-usings");
+                    LogError("支持的命令: analyze, format, csharpier, rmusing");
                     ShowUsage();
                     break;
             }
@@ -92,7 +92,7 @@ namespace CodeUnfucker
                 return false;
             }
 
-            if ((command == "format" || command == "csharpier" || command == "remove-unused-usings") && !File.Exists(path) && !Directory.Exists(path))
+            if ((command == "format" || command == "csharpier" || command == "rmusing") && !File.Exists(path) && !Directory.Exists(path))
             {
                 LogError($"格式化/处理模式下，路径必须是存在的文件或目录: {path}");
                 return false;
@@ -107,10 +107,10 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker <command> <path> [--config <config-path>]");
             LogInfo("");
             LogInfo("命令:");
-            LogInfo("  analyze              - 分析代码");
-            LogInfo("  format               - 使用内置格式化器格式化代码");
-            LogInfo("  csharpier            - 使用CSharpier格式化代码");
-            LogInfo("  remove-unused-usings - 移除未使用的using语句");
+            LogInfo("  analyze   - 分析代码");
+            LogInfo("  format    - 使用内置格式化器格式化代码");
+            LogInfo("  csharpier - 使用CSharpier格式化代码");
+            LogInfo("  rmusing   - 移除未使用的using语句");
             LogInfo("");
             LogInfo("选项:");
             LogInfo("  --config, -c  - 指定配置文件目录路径");
@@ -119,7 +119,7 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker analyze ./Scripts");
             LogInfo("  CodeUnfucker format ./Scripts --config ./MyConfig");
             LogInfo("  CodeUnfucker csharpier MyFile.cs");
-            LogInfo("  CodeUnfucker remove-unused-usings ./Scripts");
+            LogInfo("  CodeUnfucker rmusing ./Scripts");
         }
 
         private void SetupConfig(string? configPath)
