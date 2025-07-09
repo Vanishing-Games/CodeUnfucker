@@ -16,7 +16,8 @@
 
 1. **代码分析** - 静态分析C#代码并输出结果到Unity控制台
 2. **代码格式化** - 按规范重新排列类成员并添加Region宏
-3. **配置系统** - 通过JSON配置文件灵活控制所有功能
+3. **代码重构** - 使用Roslynator进行智能代码重构和优化
+4. **配置系统** - 通过JSON配置文件灵活控制所有功能
 
 ## 使用方法
 
@@ -38,6 +39,9 @@ dotnet run -- format <文件路径或目录路径> [--config <配置文件目录
 
 # 格式化代码（使用CSharpier）
 dotnet run -- csharpier <文件路径或目录路径> [--config <配置文件目录>]
+
+# 重构代码（使用Roslynator）
+dotnet run -- roslynator <文件路径或目录路径> [--config <配置文件目录>]
 
 # 查看帮助
 dotnet run -- help
@@ -62,6 +66,9 @@ dotnet run -- format ./Scripts --config ./MyConfig
 
 # 使用CSharpier格式化单个文件
 dotnet run -- csharpier MyFile.cs
+
+# 使用Roslynator重构代码
+dotnet run -- roslynator ./Scripts --config ./MyConfig
 ```
 
 ### Unity Editor集成
@@ -92,6 +99,17 @@ CodeUnfucker使用JSON配置文件来控制所有功能。配置文件位于 `Co
 - `ShowReferencedAssemblies`: 是否显示引用的程序集 (默认: true)
 - `ShowFileCount`: 是否显示文件数量 (默认: true)
 - `FileFilters`: 文件过滤规则
+
+#### RoslynatorConfig.json - 重构配置
+控制 Roslynator 代码重构的所有行为：
+- `EnableCodeRefactoring`: 是否启用代码重构 (默认: true)
+- `CreateBackupFiles`: 是否创建备份文件 (默认: true)
+- `BackupFileExtension`: 备份文件扩展名 (默认: ".roslynator.backup")
+- `MinimumSeverity`: 最小重构严重级别 (默认: "Info")
+- `EnabledRules`: 启用的重构规则列表
+- `DisabledRules`: 禁用的重构规则列表
+- `SeverityOverrides`: 特定规则的严重级别覆盖
+- `ExcludedFiles`: 排除重构的文件模式
 
 ### 配置示例
 
@@ -178,10 +196,69 @@ run-tests.bat                 # Windows
 
 详细的测试指南请查看 [TESTING.md](TESTING.md)。
 
+## Roslynator 代码重构功能
+
+### 智能代码重构
+- 使用业界标准的 Roslynator 分析器进行代码重构
+- 支持 100+ 种代码改进建议
+- 可配置的重构规则和严重级别
+- 自动应用代码优化和最佳实践
+
+### 重构规则类别
+
+#### 代码简化
+- 内联不必要的变量
+- 简化布尔表达式
+- 移除冗余的类型转换
+- 优化 LINQ 查询
+
+#### 性能优化
+- 优化字符串操作
+- 减少装箱/拆箱操作
+- 改进集合使用
+- 异步编程最佳实践
+
+#### 代码质量
+- 添加文档注释
+- 改进命名约定
+- 强化异常处理
+- 提升代码可读性
+
+#### 现代 C# 特性
+- 使用模式匹配
+- 应用空值合并操作符
+- 利用表达式语法
+- 采用 var 关键字
+
+### 配置示例
+
+```json
+{
+  "RefactorSettings": {
+    "MinimumSeverity": "Warning",
+    "EnabledRules": [
+      "RCS1036",  // Remove redundant empty line
+      "RCS1090",  // Call 'ConfigureAwait(false)'
+      "RCS1169"   // Make field read-only
+    ],
+    "SeverityOverrides": {
+      "RCS1090": "Error"  // 异步规则设为错误级别
+    }
+  }
+}
+```
+
+### 使用场景
+- **代码审查前**: 自动应用编码标准
+- **重构遗留代码**: 升级到现代 C# 语法
+- **性能优化**: 发现并修复性能问题
+- **团队协作**: 保持一致的代码风格
+
 ## 高级功能
 
 - **灵活的配置路径**: 支持通过 `--config` 参数指定配置文件位置，解决部署后配置文件路径问题
 - **多种格式化器**: 支持内置格式化器和CSharpier，满足不同需求
+- **智能代码重构**: 集成 Roslynator 提供专业级代码优化建议
 - **配置热重载**: 修改配置文件后无需重启
 - **灵活的Region命名**: 可自定义所有Region的名称
 - **可配置的Unity方法检测**: 支持添加新的Unity生命周期方法

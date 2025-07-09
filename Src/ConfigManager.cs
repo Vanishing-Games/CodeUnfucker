@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis;
 
 namespace CodeUnfucker
 {
@@ -34,6 +35,7 @@ namespace CodeUnfucker
 
         private static FormatterConfig? _formatterConfig;
         private static AnalyzerConfig? _analyzerConfig;
+        private static RoslynatorConfig? _roslynatorConfig;
         public static FormatterConfig GetFormatterConfig()
         {
             if (_formatterConfig == null)
@@ -52,6 +54,16 @@ namespace CodeUnfucker
             }
 
             return _analyzerConfig;
+        }
+
+        public static RoslynatorConfig GetRoslynatorConfig()
+        {
+            if (_roslynatorConfig == null)
+            {
+                _roslynatorConfig = LoadConfig<RoslynatorConfig>("RoslynatorConfig.json");
+            }
+
+            return _roslynatorConfig;
         }
 
         private static T LoadConfig<T>(string fileName)
@@ -97,6 +109,7 @@ namespace CodeUnfucker
         {
             _formatterConfig = null;
             _analyzerConfig = null;
+            _roslynatorConfig = null;
             Console.WriteLine("[INFO] 配置已重新加载");
         }
     }
@@ -203,5 +216,59 @@ namespace CodeUnfucker
         public bool CheckUnusedVariables { get; set; } = false;
         public bool CheckDocumentationComments { get; set; } = false;
         public int MaxComplexityThreshold { get; set; } = 10;
+    }
+
+    public class RoslynatorConfig
+    {
+        public string Description { get; set; } = "CodeUnfucker Roslynator 重构功能配置";
+        public string Version { get; set; } = "1.0.0";
+        public RefactorSettings RefactorSettings { get; set; } = new();
+        public Dictionary<string, DiagnosticSeverity> SeverityOverrides { get; set; } = new();
+        public List<string> ExcludedFiles { get; set; } = new();
+        public RoslynatorOutputSettings OutputSettings { get; set; } = new();
+    }
+
+    public class RefactorSettings
+    {
+        public bool EnableCodeRefactoring { get; set; } = true;
+        public bool CreateBackupFiles { get; set; } = true;
+        public string BackupFileExtension { get; set; } = ".roslynator.backup";
+        public DiagnosticSeverity MinimumSeverity { get; set; } = DiagnosticSeverity.Info;
+        public bool ApplyAllSuggestions { get; set; } = true;
+        public int MaxIterations { get; set; } = 3;
+        public List<string> EnabledRules { get; set; } = new()
+        {
+            // 常用的 Roslynator 规则
+            "RCS1036", // Remove redundant empty line
+            "RCS1037", // Remove trailing white-space
+            "RCS1090", // Call 'ConfigureAwait(false)'
+            "RCS1124", // Inline local variable
+            "RCS1129", // Remove redundant field initalization
+            "RCS1138", // Add summary to documentation comment
+            "RCS1157", // Composite enum value contains undefined flag
+            "RCS1163", // Unused parameter
+            "RCS1164", // Unused type parameter
+            "RCS1169", // Make field read-only
+            "RCS1170", // Use read-only auto-implemented property
+            "RCS1173", // Use coalesce expression instead of if
+            "RCS1179", // Unnecessary assignment
+            "RCS1197", // Optimize StringBuilder.Append/AppendLine call
+            "RCS1210", // Return completed task instead of returning null
+        };
+        public List<string> DisabledRules { get; set; } = new()
+        {
+            // 可能过于激进的规则
+            "RCS1003", // Add braces to if-else
+            "RCS1007", // Add braces
+        };
+    }
+
+    public class RoslynatorOutputSettings
+    {
+        public bool ShowDetailedLog { get; set; } = true;
+        public bool ShowAppliedRules { get; set; } = true;
+        public bool ShowSkippedRules { get; set; } = false;
+        public bool ShowPerformanceMetrics { get; set; } = false;
+        public string LogLevel { get; set; } = "Info";
     }
 }

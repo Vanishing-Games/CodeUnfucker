@@ -724,6 +724,15 @@
           "lib/netstandard2.0/NuGet.Frameworks.dll": {}
         }
       },
+      "Roslynator.CodeAnalysis.Analyzers/4.12.7": {
+        "type": "package"
+      },
+      "Roslynator.CodeFixes/4.12.7": {
+        "type": "package"
+      },
+      "Roslynator.Formatting.Analyzers/4.12.7": {
+        "type": "package"
+      },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
         "type": "package",
         "runtimeTargets": {
@@ -2330,6 +2339,9 @@
           "CSharpier.Core": "0.30.2",
           "Microsoft.CodeAnalysis.CSharp": "4.11.0",
           "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+          "Roslynator.CodeAnalysis.Analyzers": "4.12.7",
+          "Roslynator.CodeFixes": "4.12.7",
+          "Roslynator.Formatting.Analyzers": "4.12.7",
           "System.Text.Json": "9.0.0"
         },
         "compile": {
@@ -3729,6 +3741,100 @@
         "lib/netstandard2.0/NuGet.Frameworks.dll",
         "nuget.frameworks.6.5.0.nupkg.sha512",
         "nuget.frameworks.nuspec"
+      ]
+    },
+    "Roslynator.CodeAnalysis.Analyzers/4.12.7": {
+      "sha512": "dpfBtFi/IuL/vQhA0Inak4pYIsnxAKHUiP+K+w6K0FFScQEwzQ199LGzXJlIM31u6xmnC4f6bPCFjni76HspEQ==",
+      "type": "package",
+      "path": "roslynator.codeanalysis.analyzers/4.12.7",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator.CodeAnalysis.Analyzers.CodeFixes.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator.CodeAnalysis.Analyzers.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Workspaces.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator.CodeAnalysis.Analyzers.CodeFixes.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator.CodeAnalysis.Analyzers.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeAnalysis_Analyzers_Roslynator.Workspaces.Core.dll",
+        "docs/README.md",
+        "icon.png",
+        "roslynator.codeanalysis.analyzers.4.12.7.nupkg.sha512",
+        "roslynator.codeanalysis.analyzers.nuspec",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "Roslynator.CodeFixes/4.12.7": {
+      "sha512": "YZNhXBmrlOgjtFBHpRK1X02OLWrqzDPJCrbtN4F/YK/9+jMWanhT4nLA/A30rSC8gh8dT0svhRJs/c+WHGbQow==",
+      "type": "package",
+      "path": "roslynator.codefixes/4.12.7",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator.CSharp.CodeFixes.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_CodeFixes_Roslynator.Workspaces.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator.CSharp.CodeFixes.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_CodeFixes_Roslynator.Workspaces.Core.dll",
+        "docs/README.md",
+        "icon.png",
+        "roslynator.codefixes.4.12.7.nupkg.sha512",
+        "roslynator.codefixes.nuspec",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "Roslynator.Formatting.Analyzers/4.12.7": {
+      "sha512": "GT0WmGIRei0yY+SAmQ3A/hw4x8oTFsPlV65R5Lae8E4Bs4SfYR/Z3ANRz6TJjQCKlAJ2p7y4Xu56mGE/RZm4ig==",
+      "type": "package",
+      "path": "roslynator.formatting.analyzers/4.12.7",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator.Formatting.Analyzers.CodeFixes.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator.Formatting.Analyzers.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn3.8/cs/Roslynator_Formatting_Analyzers_Roslynator.Workspaces.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator.Formatting.Analyzers.CodeFixes.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator.Formatting.Analyzers.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.CSharp.Workspaces.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.CSharp.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.Core.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.Workspaces.Common.dll",
+        "analyzers/dotnet/roslyn4.7/cs/Roslynator_Formatting_Analyzers_Roslynator.Workspaces.Core.dll",
+        "docs/README.md",
+        "icon.png",
+        "roslynator.formatting.analyzers.4.12.7.nupkg.sha512",
+        "roslynator.formatting.analyzers.nuspec",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
       ]
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
@@ -7607,19 +7713,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/vanish/.nuget/packages/": {}
+    "/home/ubuntu/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
+      "projectUniqueName": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
       "projectName": "CodeUnfucker.Tests",
-      "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/CodeUnfucker.Tests.csproj",
-      "packagesPath": "/Users/vanish/.nuget/packages/",
-      "outputPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/Tests.Project/obj/",
+      "projectPath": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
+      "packagesPath": "/home/ubuntu/.nuget/packages/",
+      "outputPath": "/workspace/Tests.Project/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/vanish/.nuget/NuGet/NuGet.Config"
+        "/home/ubuntu/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -7631,8 +7737,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj": {
-              "projectPath": "/Users/vanish/Desktop/FromGit/CodeUnfucker/CodeUnfucker.csproj"
+            "/workspace/CodeUnfucker.csproj": {
+              "projectPath": "/workspace/CodeUnfucker.csproj"
             }
           }
         }
@@ -7647,7 +7753,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -7702,7 +7808,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/ubuntu/.dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -21,6 +21,9 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="CSharpier.Core" Version="0.30.2" />
+    <PackageReference Include="Roslynator.CodeAnalysis.Analyzers" Version="4.12.7" />
+    <PackageReference Include="Roslynator.Formatting.Analyzers" Version="4.12.7" />
+    <PackageReference Include="Roslynator.CodeFixes" Version="4.12.7" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config/*.json">

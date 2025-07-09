@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -40,9 +41,12 @@ namespace CodeUnfucker
                 case "csharpier":
                     FormatCodeWithCSharpier(path);
                     break;
+                case "roslynator":
+                    RefactorCodeWithRoslynator(path);
+                    break;
                 default:
                     LogError($"未知命令: {command}");
-                    LogError("支持的命令: analyze, format, csharpier");
+                    LogError("支持的命令: analyze, format, csharpier, roslynator");
                     ShowUsage();
                     break;
             }
@@ -107,6 +111,7 @@ namespace CodeUnfucker
             LogInfo("  analyze    - 分析代码");
             LogInfo("  format     - 使用内置格式化器格式化代码");
             LogInfo("  csharpier  - 使用CSharpier格式化代码");
+            LogInfo("  roslynator - 使用Roslynator进行代码重构");
             LogInfo("");
             LogInfo("选项:");
             LogInfo("  --config, -c  - 指定配置文件目录路径");
@@ -115,6 +120,7 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker analyze ./Scripts");
             LogInfo("  CodeUnfucker format ./Scripts --config ./MyConfig");
             LogInfo("  CodeUnfucker csharpier MyFile.cs");
+            LogInfo("  CodeUnfucker roslynator ./Scripts");
         }
 
         private void SetupConfig(string? configPath)
@@ -197,6 +203,30 @@ namespace CodeUnfucker
         {
             LogInfo($"开始格式化代码，扫描路径: {path}");
             FormatCodeInternal(path, false);
+        }
+
+        private void RefactorCodeWithRoslynator(string path)
+        {
+            LogInfo($"开始使用 Roslynator 重构代码，扫描路径: {path}");
+            RefactorCodeInternal(path);
+        }
+
+        private void RefactorCodeInternal(string path)
+        {
+            if (File.Exists(path) && path.EndsWith(".cs"))
+            {
+                // 重构单个文件
+                RefactorSingleFileAsync(path).Wait();
+            }
+            else if (Directory.Exists(path))
+            {
+                // 重构目录中的所有文件
+                RefactorDirectoryAsync(path).Wait();
+            }
+            else
+            {
+                LogError($"无效的路径: {path}");
+            }
         }
 
         private void FormatSingleFile(string filePath, bool forceCSharpier = false)
@@ -310,6 +340,91 @@ namespace CodeUnfucker
             {
                 LogInfo($"  - {reference.Name}");
             }
+        }
+
+        private async Task RefactorSingleFileAsync(string filePath)
+        {
+            try
+            {
+                LogInfo($"重构文件: {filePath}");
+                string originalCode = File.ReadAllText(filePath);
+                
+                var refactorer = new RoslynatorRefactorer();
+                string refactoredCode = await refactorer.RefactorCodeAsync(originalCode, filePath);
+
+                // 检查是否有变化
+                if (refactoredCode != originalCode)
+                {
+                    var config = ConfigManager.GetRoslynatorConfig();
+                    
+                    // 根据配置决定是否创建备份
+                    if (config.RefactorSettings.CreateBackupFiles)
+                    {
+                        string backupPath = filePath + config.RefactorSettings.BackupFileExtension;
+                        File.Copy(filePath, backupPath, true);
+                        LogInfo($"已创建备份: {backupPath}");
+                    }
+
+                    // 写入重构后的代码
+                    File.WriteAllText(filePath, refactoredCode);
+                    LogInfo($"✅ 重构完成: {filePath}");
+                }
+                else
+                {
+                    LogInfo($"文件无需重构: {filePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"重构文件失败 {filePath}: {ex.Message}");
+            }
+        }
+
+        private async Task RefactorDirectoryAsync(string directoryPath)
+        {
+            var csFiles = GetCsFiles(directoryPath);
+            if (csFiles.Length == 0)
+            {
+                LogWarn("未找到任何 .cs 文件");
+                return;
+            }
+
+            var config = ConfigManager.GetRoslynatorConfig();
+            
+            // 过滤排除的文件
+            var filteredFiles = csFiles.Where(file => 
+                !config.ExcludedFiles.Any(pattern => 
+                    file.Contains(pattern, StringComparison.OrdinalIgnoreCase))).ToArray();
+
+            LogInfo($"找到 {filteredFiles.Length} 个 .cs 文件需要重构（排除 {csFiles.Length - filteredFiles.Length} 个文件）");
+            
+            int successCount = 0;
+            int modifiedCount = 0;
+            int failureCount = 0;
+            
+            foreach (var file in filteredFiles)
+            {
+                try
+                {
+                    string originalCode = File.ReadAllText(file);
+                    await RefactorSingleFileAsync(file);
+                    
+                    // 检查文件是否被修改
+                    string currentCode = File.ReadAllText(file);
+                    if (currentCode != originalCode)
+                    {
+                        modifiedCount++;
+                    }
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    LogError($"重构失败 {file}: {ex.Message}");
+                    failureCount++;
+                }
+            }
+
+            LogInfo($"重构完成！成功: {successCount}, 修改: {modifiedCount}, 失败: {failureCount}");
         }
 
 #region LoggingHelpers

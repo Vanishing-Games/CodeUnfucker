@@ -12,6 +12,9 @@
           "Microsoft.CodeAnalysis.Analyzers": "3.3.4",
           "Microsoft.CodeAnalysis.CSharp": "4.11.0",
           "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+          "Roslynator.CodeAnalysis.Analyzers": "4.12.7",
+          "Roslynator.CodeFixes": "4.12.7",
+          "Roslynator.Formatting.Analyzers": "4.12.7",
           "System.Text.Json": "9.0.0"
         },
         "runtime": {
@@ -269,6 +272,9 @@
           }
         }
       },
+      "Roslynator.CodeAnalysis.Analyzers/4.12.7": {},
+      "Roslynator.CodeFixes/4.12.7": {},
+      "Roslynator.Formatting.Analyzers/4.12.7": {},
       "System.Collections.Immutable/8.0.0": {},
       "System.Composition/8.0.0": {
         "dependencies": {
@@ -425,6 +431,27 @@
       "sha512": "sha512-UtwEt42V7/LnvAcschSlmUXRLEj0poX1H7QeFbY5bezcS+tJBCssAq8C7GfisgIA0qZPo2xzOrwKGBbg51CetA==",
       "path": "microsoft.codeanalysis.workspaces.common/4.11.0",
       "hashPath": "microsoft.codeanalysis.workspaces.common.4.11.0.nupkg.sha512"
+    },
+    "Roslynator.CodeAnalysis.Analyzers/4.12.7": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dpfBtFi/IuL/vQhA0Inak4pYIsnxAKHUiP+K+w6K0FFScQEwzQ199LGzXJlIM31u6xmnC4f6bPCFjni76HspEQ==",
+      "path": "roslynator.codeanalysis.analyzers/4.12.7",
+      "hashPath": "roslynator.codeanalysis.analyzers.4.12.7.nupkg.sha512"
+    },
+    "Roslynator.CodeFixes/4.12.7": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-YZNhXBmrlOgjtFBHpRK1X02OLWrqzDPJCrbtN4F/YK/9+jMWanhT4nLA/A30rSC8gh8dT0svhRJs/c+WHGbQow==",
+      "path": "roslynator.codefixes/4.12.7",
+      "hashPath": "roslynator.codefixes.4.12.7.nupkg.sha512"
+    },
+    "Roslynator.Formatting.Analyzers/4.12.7": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-GT0WmGIRei0yY+SAmQ3A/hw4x8oTFsPlV65R5Lae8E4Bs4SfYR/Z3ANRz6TJjQCKlAJ2p7y4Xu56mGE/RZm4ig==",
+      "path": "roslynator.formatting.analyzers/4.12.7",
+      "hashPath": "roslynator.formatting.analyzers.4.12.7.nupkg.sha512"
     },
     "System.Collections.Immutable/8.0.0": {
       "type": "package",
