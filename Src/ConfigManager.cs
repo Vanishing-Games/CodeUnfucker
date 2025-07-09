@@ -13,8 +13,10 @@ namespace CodeUnfucker
         {
             get
             {
+                // 如果显式设置了自定义配置路径，就使用它，即使路径不存在
                 if (!string.IsNullOrEmpty(_customConfigPath))
                     return _customConfigPath;
+                    
                 // 按优先级查找配置文件
                 var searchPaths = new[]
                 {
