@@ -210,11 +210,16 @@ namespace CodeUnfucker.Tests
             // Arrange
             var customConfig = new FormatterConfig
             {
+                FormatterSettings = new FormatterSettings(),
                 UnityLifeCycleMethods = new() { "CustomAwake", "CustomStart", "CustomUpdate" }
             };
 
             CreateTempConfigFile("FormatterConfig.json", customConfig);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            var configDir = Path.Combine(TestTempDirectory, "Config");
+            ConfigManager.SetConfigPath(configDir);
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
 
             // Act
             var config = ConfigManager.GetFormatterConfig();

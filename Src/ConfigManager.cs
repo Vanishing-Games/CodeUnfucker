@@ -84,6 +84,7 @@ namespace CodeUnfucker
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     ReadCommentHandling = JsonCommentHandling.Skip,
                     AllowTrailingCommas = true,
                     Converters = { new JsonStringEnumConverter() }
@@ -218,5 +219,7 @@ namespace CodeUnfucker
         public bool CheckUnusedVariables { get; set; } = false;
         public bool CheckDocumentationComments { get; set; } = false;
         public int MaxComplexityThreshold { get; set; } = 10;
+        public bool EnablePureMethodAnalysis { get; set; } = true;
+        public bool EnableUnityHeapAllocationAnalysis { get; set; } = true;
     }
 }

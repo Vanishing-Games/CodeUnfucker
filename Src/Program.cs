@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using CodeUnfucker.Analyzers;
 
 namespace CodeUnfucker
 {
@@ -43,9 +44,12 @@ namespace CodeUnfucker
                 case "rmusing":
                     RemoveUnusedUsings(path);
                     break;
+                case "roslynator":
+                    RunRoslynatorRefactoring(path);
+                    break;
                 default:
                     LogError($"未知命令: {command}");
-                    LogError("支持的命令: analyze, format, csharpier, rmusing");
+                    LogError("支持的命令: analyze, format, csharpier, rmusing, roslynator");
                     ShowUsage();
                     break;
             }
@@ -92,7 +96,7 @@ namespace CodeUnfucker
                 return false;
             }
 
-            if ((command == "format" || command == "csharpier" || command == "rmusing") && !File.Exists(path) && !Directory.Exists(path))
+            if ((command == "format" || command == "csharpier" || command == "rmusing" || command == "roslynator") && !File.Exists(path) && !Directory.Exists(path))
             {
                 LogError($"格式化/处理模式下，路径必须是存在的文件或目录: {path}");
                 return false;
@@ -111,6 +115,7 @@ namespace CodeUnfucker
             LogInfo("  format    - 使用内置格式化器格式化代码");
             LogInfo("  csharpier - 使用CSharpier格式化代码");
             LogInfo("  rmusing   - 移除未使用的using语句");
+            LogInfo("  roslynator - 使用Roslynator重构代码");
             LogInfo("");
             LogInfo("选项:");
             LogInfo("  --config, -c  - 指定配置文件目录路径");
@@ -120,6 +125,7 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker format ./Scripts --config ./MyConfig");
             LogInfo("  CodeUnfucker csharpier MyFile.cs");
             LogInfo("  CodeUnfucker rmusing ./Scripts");
+            LogInfo("  CodeUnfucker roslynator ./Scripts");
         }
 
         private void SetupConfig(string? configPath)
@@ -190,12 +196,152 @@ namespace CodeUnfucker
                     {
                         LogReferencedAssemblies(compilation);
                     }
+
+                    // 运行静态分析器
+                    if (config.AnalyzerSettings.EnableDiagnostics)
+                    {
+                        RunStaticAnalyzers(syntaxTrees, compilation, config);
+                    }
                 }
             }
             else
             {
                 LogInfo("语法分析已禁用，跳过分析步骤");
             }
+        }
+
+        /// <summary>
+        /// 运行所有静态分析器
+        /// </summary>
+        private void RunStaticAnalyzers(List<SyntaxTree> syntaxTrees, CSharpCompilation compilation, AnalyzerConfig config)
+        {
+            LogInfo("开始运行静态分析器...");
+            var allDiagnostics = new List<Diagnostic>();
+            int analyzedFileCount = 0;
+
+            foreach (var syntaxTree in syntaxTrees)
+            {
+                var semanticModel = compilation.GetSemanticModel(syntaxTree);
+                var fileName = Path.GetFileName(syntaxTree.FilePath);
+                
+                if (config.AnalyzerSettings.VerboseLogging)
+                {
+                    LogDebug($"分析文件: {fileName}");
+                }
+
+                // Pure Method Analyzer (UNITY0009/UNITY0010)
+                if (config.StaticAnalysisRules.EnablePureMethodAnalysis)
+                {
+                    var pureAnalyzer = new PureMethodAnalyzer();
+                    pureAnalyzer.AnalyzeSyntaxTree(syntaxTree, semanticModel);
+                    allDiagnostics.AddRange(pureAnalyzer.Diagnostics);
+                }
+
+                // Unity Update Heap Allocation Analyzer (UNITY0001)
+                if (config.StaticAnalysisRules.EnableUnityHeapAllocationAnalysis)
+                {
+                    var heapAnalyzer = new UnityUpdateHeapAllocationAnalyzer();
+                    heapAnalyzer.AnalyzeSyntaxTree(syntaxTree, semanticModel);
+                    allDiagnostics.AddRange(heapAnalyzer.Diagnostics);
+                }
+
+                analyzedFileCount++;
+            }
+
+            // 输出诊断结果
+            OutputDiagnostics(allDiagnostics, config);
+            LogInfo($"静态分析完成！分析了 {analyzedFileCount} 个文件，发现 {allDiagnostics.Count} 个问题");
+        }
+
+        /// <summary>
+        /// 输出诊断结果
+        /// </summary>
+        private void OutputDiagnostics(List<Diagnostic> diagnostics, AnalyzerConfig config)
+        {
+            if (diagnostics.Count == 0)
+            {
+                LogInfo("✅ 未发现任何问题");
+                return;
+            }
+
+            // 按严重程度分组
+            var groupedDiagnostics = diagnostics.GroupBy(d => d.Severity).OrderByDescending(g => g.Key);
+
+            foreach (var group in groupedDiagnostics)
+            {
+                LogInfo($"\n=== {GetSeverityDisplayName(group.Key)} ({group.Count()}) ===");
+                
+                foreach (var diagnostic in group.OrderBy(d => d.Location.SourceTree?.FilePath).ThenBy(d => d.Location.GetLineSpan().StartLinePosition.Line))
+                {
+                    OutputDiagnostic(diagnostic, config);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 输出单个诊断信息
+        /// </summary>
+        private void OutputDiagnostic(Diagnostic diagnostic, AnalyzerConfig config)
+        {
+            var location = diagnostic.Location;
+            var fileName = Path.GetFileName(location.SourceTree?.FilePath ?? "Unknown");
+            var lineSpan = location.GetLineSpan();
+            var line = lineSpan.StartLinePosition.Line + 1;
+            var column = lineSpan.StartLinePosition.Character + 1;
+
+            var severityIcon = GetSeverityIcon(diagnostic.Severity);
+            var message = $"{severityIcon} [{diagnostic.Id}] {fileName}({line},{column}): {diagnostic.GetMessage()}";
+
+            switch (diagnostic.Severity)
+            {
+                case DiagnosticSeverity.Error:
+                    LogError(message);
+                    break;
+                case DiagnosticSeverity.Warning:
+                    LogWarn(message);
+                    break;
+                case DiagnosticSeverity.Info:
+                    LogInfo(message);
+                    break;
+                default:
+                    LogDebug(message);
+                    break;
+            }
+
+            if (config.OutputSettings.ShowDetailedErrors && !string.IsNullOrEmpty(diagnostic.Descriptor.Description?.ToString()))
+            {
+                LogInfo($"    描述: {diagnostic.Descriptor.Description}");
+            }
+        }
+
+        /// <summary>
+        /// 获取严重程度显示名称
+        /// </summary>
+        private string GetSeverityDisplayName(DiagnosticSeverity severity)
+        {
+            return severity switch
+            {
+                DiagnosticSeverity.Error => "错误",
+                DiagnosticSeverity.Warning => "警告", 
+                DiagnosticSeverity.Info => "信息",
+                DiagnosticSeverity.Hidden => "隐藏",
+                _ => "未知"
+            };
+        }
+
+        /// <summary>
+        /// 获取严重程度图标
+        /// </summary>
+        private string GetSeverityIcon(DiagnosticSeverity severity)
+        {
+            return severity switch
+            {
+                DiagnosticSeverity.Error => "❌",
+                DiagnosticSeverity.Warning => "⚠️",
+                DiagnosticSeverity.Info => "ℹ️",
+                DiagnosticSeverity.Hidden => "👁️",
+                _ => "❓"
+            };
         }
 
         private void FormatCode(string path)
@@ -208,6 +354,13 @@ namespace CodeUnfucker
         {
             LogInfo($"开始移除未使用的using语句，扫描路径: {path}");
             RemoveUnusedUsingsInternal(path);
+        }
+
+        private void RunRoslynatorRefactoring(string path)
+        {
+            LogInfo($"开始Roslynator重构，扫描路径: {path}");
+            var refactorer = new RoslynatorRefactorer();
+            refactorer.RefactorCode(path);
         }
 
         private void RemoveUnusedUsingsInternal(string path)
