@@ -100,6 +100,17 @@ CodeUnfucker使用JSON配置文件来控制所有功能。配置文件位于 `Co
 - `ShowFileCount`: 是否显示文件数量 (默认: true)
 - `FileFilters`: 文件过滤规则
 
+#### PureAnalyzerConfig.json - Pure 属性分析配置
+控制 [Pure] 属性分析的所有行为：
+- `Accessibility`: 需要检查的可见性级别 (默认: ["public", "internal"])
+- `ExcludePartial`: 是否排除 partial 方法 (默认: true)
+- `AllowGetters`: 是否检查属性的 getter (默认: true)
+- `EnableSuggestAdd`: 是否启用添加建议 (默认: true)
+- `EnableSuggestRemove`: 是否启用移除建议 (默认: true)
+- `ExcludedNamespaces`: 排除的命名空间
+- `ExcludedMethods`: 排除的具体方法
+- `UnityApiPatterns`: Unity API 正则表达式模式
+
 ### 配置示例
 
 ```json
@@ -189,8 +200,15 @@ run-tests.bat                 # Windows
 
 - **灵活的配置路径**: 支持通过 `--config` 参数指定配置文件位置，解决部署后配置文件路径问题
 - **多种格式化器**: 支持内置格式化器和CSharpier，满足不同需求
+- **Pure 属性智能分析**: 自动检测应该添加或移除 [Pure] 属性的方法，支持代码修复器
 - **配置热重载**: 修改配置文件后无需重启
 - **灵活的Region命名**: 可自定义所有Region的名称
 - **可配置的Unity方法检测**: 支持添加新的Unity生命周期方法
 - **详细的日志控制**: 可控制输出的详细程度
-- **完整的测试套件**: 高覆盖率的单元测试确保代码质量 
+- **完整的测试套件**: 高覆盖率的单元测试确保代码质量
+
+## 详细文档
+
+- **[Pure 属性分析器使用指南](PURE_ANALYZER.md)** - 详细的 Pure 分析器功能说明和配置
+- **[实现总结](IMPLEMENTATION_SUMMARY.md)** - 技术实现细节和开发过程记录
+- **[测试指南](TESTING.md)** - 测试运行和覆盖率报告 
