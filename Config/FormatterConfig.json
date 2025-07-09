@@ -5,7 +5,8 @@
     "MinLinesForRegion": 15,
     "EnableRegionGeneration": true,
     "CreateBackupFiles": false,
-    "BackupFileExtension": ".backup"
+    "BackupFileExtension": ".backup",
+    "FormatterType": "Built_in"
   },
   "MemberOrdering": {
     "Order": [

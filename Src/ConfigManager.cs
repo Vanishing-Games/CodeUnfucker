@@ -2,23 +2,45 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CodeUnfucker
 {
     public static class ConfigManager
     {
-        private static string ConfigPath =>
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
+        private static string? _customConfigPath;
+        private static string ConfigPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_customConfigPath))
+                    return _customConfigPath;
+                // 按优先级查找配置文件
+                var searchPaths = new[]
+                {
+                    Path.Combine(Directory.GetCurrentDirectory(), "Config"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config")
+                };
+                foreach (var path in searchPaths)
+                {
+                    if (Directory.Exists(path))
+                        return path;
+                }
+
+                // 如果都不存在，返回当前目录下的Config
+                return Path.Combine(Directory.GetCurrentDirectory(), "Config");
+            }
+        }
 
         private static FormatterConfig? _formatterConfig;
         private static AnalyzerConfig? _analyzerConfig;
-
         public static FormatterConfig GetFormatterConfig()
         {
             if (_formatterConfig == null)
             {
                 _formatterConfig = LoadConfig<FormatterConfig>("FormatterConfig.json");
             }
+
             return _formatterConfig;
         }
 
@@ -28,6 +50,7 @@ namespace CodeUnfucker
             {
                 _analyzerConfig = LoadConfig<AnalyzerConfig>("AnalyzerConfig.json");
             }
+
             return _analyzerConfig;
         }
 
@@ -37,7 +60,6 @@ namespace CodeUnfucker
             try
             {
                 string configFile = Path.Combine(ConfigPath, fileName);
-
                 if (!File.Exists(configFile))
                 {
                     Console.WriteLine($"[WARN] 配置文件不存在: {configFile}，使用默认配置");
@@ -50,8 +72,8 @@ namespace CodeUnfucker
                     PropertyNameCaseInsensitive = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
                     AllowTrailingCommas = true,
+                    Converters = { new JsonStringEnumConverter() }
                 };
-
                 var config = JsonSerializer.Deserialize<T>(jsonContent, options);
                 Console.WriteLine($"[INFO] 成功加载配置文件: {fileName}");
                 return config ?? new T();
@@ -62,6 +84,13 @@ namespace CodeUnfucker
                 Console.WriteLine($"[INFO] 使用默认配置");
                 return new T();
             }
+        }
+
+        public static void SetConfigPath(string configPath)
+        {
+            _customConfigPath = configPath;
+            ReloadConfigs();
+            Console.WriteLine($"[INFO] 配置路径已设置为: {configPath}");
         }
 
         public static void ReloadConfigs()
@@ -89,20 +118,26 @@ namespace CodeUnfucker
         public bool EnableRegionGeneration { get; set; } = true;
         public bool CreateBackupFiles { get; set; } = true;
         public string BackupFileExtension { get; set; } = ".backup";
+        public FormatterType FormatterType { get; set; } = FormatterType.Built_in;
+    }
+
+    public enum FormatterType
+    {
+        Built_in,
+        CSharpier
     }
 
     public class MemberOrdering
     {
-        public List<string> Order { get; set; } =
-            new()
-            {
-                "Public",
-                "UnityLifeCycle",
-                "Protected",
-                "Private",
-                "NestedClasses",
-                "MemberVariables",
-            };
+        public List<string> Order { get; set; } = new()
+        {
+            "Public",
+            "UnityLifeCycle",
+            "Protected",
+            "Private",
+            "NestedClasses",
+            "MemberVariables",
+        };
         public string Description { get; set; } = "类成员的排序规则，按此顺序重新排列";
     }
 
@@ -138,9 +173,18 @@ namespace CodeUnfucker
 
     public class FileFilters
     {
-        public List<string> IncludePatterns { get; set; } = new() { "*.cs" };
-        public List<string> ExcludePatterns { get; set; } =
-            new() { "*.Designer.cs", "*.generated.cs", "**/bin/**", "**/obj/**", "**/Temp/**" };
+        public List<string> IncludePatterns { get; set; } = new()
+        {
+            "*.cs"
+        };
+        public List<string> ExcludePatterns { get; set; } = new()
+        {
+            "*.Designer.cs",
+            "*.generated.cs",
+            "**/bin/**",
+            "**/obj/**",
+            "**/Temp/**"
+        };
         public bool SearchSubdirectories { get; set; } = true;
     }
 
