@@ -160,6 +160,7 @@ namespace CodeUnfucker
         public FileFilters FileFilters { get; set; } = new();
         public OutputSettings OutputSettings { get; set; } = new();
         public StaticAnalysisRules StaticAnalysisRules { get; set; } = new();
+        public UnityAnalyzerConfig UnityAnalyzer { get; set; } = new();
     }
 
     public class AnalyzerSettings

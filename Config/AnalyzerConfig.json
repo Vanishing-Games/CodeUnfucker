@@ -33,5 +33,24 @@
     "CheckUnusedVariables": false,
     "CheckDocumentationComments": false,
     "MaxComplexityThreshold": 10
+  },
+  "UnityAnalyzer": {
+    "EnableUnityAnalysis": true,
+    "CheckNewKeyword": true,
+    "CheckLinqMethods": true,
+    "CheckStringConcatenation": true,
+    "CheckStringInterpolation": true,
+    "CheckClosures": true,
+    "CheckCollectionInitialization": true,
+    "CustomUpdateMethods": [
+      "OnPreCull",
+      "OnPreRender", 
+      "OnPostRender",
+      "OnRenderObject",
+      "OnApplicationPause",
+      "OnApplicationFocus"
+    ],
+    "ExcludedValueTypes": [],
+    "DefaultSeverity": "Warning"
   }
 } 

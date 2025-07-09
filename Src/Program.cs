@@ -177,6 +177,13 @@ namespace CodeUnfucker
             if (config.AnalyzerSettings.EnableSyntaxAnalysis)
             {
                 var syntaxTrees = ParseSyntaxTrees(csFiles);
+                
+                // Unity 性能分析
+                if (config.UnityAnalyzer.EnableUnityAnalysis)
+                {
+                    RunUnityPerformanceAnalysis(syntaxTrees, config);
+                }
+                
                 if (config.AnalyzerSettings.EnableSemanticAnalysis)
                 {
                     var references = GetMetadataReferences();
@@ -184,6 +191,12 @@ namespace CodeUnfucker
                     if (config.AnalyzerSettings.ShowReferencedAssemblies)
                     {
                         LogReferencedAssemblies(compilation);
+                    }
+                    
+                    // 使用语义模型增强 Unity 分析
+                    if (config.UnityAnalyzer.EnableUnityAnalysis)
+                    {
+                        RunUnityPerformanceAnalysisWithSemantics(syntaxTrees, compilation, config);
                     }
                 }
             }
@@ -310,6 +323,110 @@ namespace CodeUnfucker
             {
                 LogInfo($"  - {reference.Name}");
             }
+        }
+
+        private void RunUnityPerformanceAnalysis(List<SyntaxTree> syntaxTrees, AnalyzerConfig config)
+        {
+            LogInfo("开始 Unity 性能分析 (仅语法分析)");
+            var analyzer = new UnityPerformanceAnalyzer(config.UnityAnalyzer);
+            var allDiagnostics = new List<UnityDiagnostic>();
+
+            foreach (var syntaxTree in syntaxTrees)
+            {
+                var diagnostics = analyzer.AnalyzeSyntaxTree(syntaxTree);
+                allDiagnostics.AddRange(diagnostics);
+            }
+
+            LogUnityAnalysisResults(allDiagnostics, config);
+        }
+
+        private void RunUnityPerformanceAnalysisWithSemantics(List<SyntaxTree> syntaxTrees, CSharpCompilation compilation, AnalyzerConfig config)
+        {
+            LogInfo("开始 Unity 性能分析 (包含语义分析)");
+            var analyzer = new UnityPerformanceAnalyzer(config.UnityAnalyzer);
+            var allDiagnostics = new List<UnityDiagnostic>();
+
+            foreach (var syntaxTree in syntaxTrees)
+            {
+                var semanticModel = compilation.GetSemanticModel(syntaxTree);
+                var diagnostics = analyzer.AnalyzeSyntaxTree(syntaxTree, semanticModel);
+                allDiagnostics.AddRange(diagnostics);
+            }
+
+            LogUnityAnalysisResults(allDiagnostics, config);
+        }
+
+        private void LogUnityAnalysisResults(List<UnityDiagnostic> diagnostics, AnalyzerConfig config)
+        {
+            if (diagnostics.Count == 0)
+            {
+                LogInfo("✅ Unity 性能分析完成：未发现堆内存分配问题");
+                return;
+            }
+
+            LogWarn($"🔍 Unity 性能分析完成：发现 {diagnostics.Count} 个潜在的堆内存分配问题");
+            LogInfo("");
+
+            // 按文件分组显示结果
+            var groupedByFile = diagnostics.GroupBy(d => d.FilePath).OrderBy(g => g.Key);
+            
+            foreach (var fileGroup in groupedByFile)
+            {
+                var fileName = System.IO.Path.GetFileName(fileGroup.Key);
+                LogInfo($"📁 文件: {fileName}");
+                
+                foreach (var diagnostic in fileGroup.OrderBy(d => d.LineNumber))
+                {
+                    var severityIcon = diagnostic.Severity switch
+                    {
+                        DiagnosticSeverity.Error => "❌",
+                        DiagnosticSeverity.Warning => "⚠️",
+                        DiagnosticSeverity.Info => "ℹ️",
+                        _ => "🔍"
+                    };
+                    
+                    LogInfo($"  {severityIcon} {diagnostic}");
+                    
+                    if (config.OutputSettings.ShowDetailedErrors)
+                    {
+                        LogInfo($"     类型: {diagnostic.Type}, 类: {diagnostic.ClassName}, 方法: {diagnostic.MethodName}");
+                    }
+                }
+                LogInfo("");
+            }
+
+            // 统计信息
+            var stats = diagnostics.GroupBy(d => d.Type)
+                                  .Select(g => new { Type = g.Key, Count = g.Count() })
+                                  .OrderByDescending(s => s.Count);
+
+            LogInfo("📊 问题类型统计:");
+            foreach (var stat in stats)
+            {
+                var description = GetDiagnosticTypeDescription(stat.Type);
+                LogInfo($"  • {description}: {stat.Count} 个");
+            }
+
+            LogInfo("");
+            LogInfo("💡 建议:");
+            LogInfo("  - 考虑使用对象池来避免频繁的 new 操作");
+            LogInfo("  - 使用 StringBuilder 替代字符串拼接");
+            LogInfo("  - 缓存 LINQ 查询结果，避免每帧重复计算");
+            LogInfo("  - 将复杂计算移到 Start() 或 Awake() 中");
+        }
+
+        private string GetDiagnosticTypeDescription(UnityDiagnosticType type)
+        {
+            return type switch
+            {
+                UnityDiagnosticType.NewKeyword => "new 关键字分配",
+                UnityDiagnosticType.LinqMethod => "LINQ 方法调用",
+                UnityDiagnosticType.StringConcatenation => "字符串拼接",
+                UnityDiagnosticType.StringInterpolation => "字符串插值",
+                UnityDiagnosticType.ImplicitClosure => "隐式闭包",
+                UnityDiagnosticType.CollectionInitialization => "集合初始化",
+                _ => "未知类型"
+            };
         }
 
 #region LoggingHelpers
