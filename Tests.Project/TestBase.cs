@@ -23,6 +23,10 @@ namespace CodeUnfucker.Tests
             // 创建临时测试目录
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(TestTempDirectory);
+            
+            // 强制设置一个不存在的配置路径，确保不会加载项目的配置文件
+            var isolatedConfigPath = Path.Combine(TestTempDirectory, "IsolatedConfig");
+            ConfigManager.SetConfigPath(isolatedConfigPath);
 
             // 设置测试数据目录
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -56,6 +60,8 @@ namespace CodeUnfucker.Tests
             {
                 WriteIndented = true,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true,
                 Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
             });
             File.WriteAllText(filePath, jsonContent);
@@ -142,6 +148,10 @@ namespace CodeUnfucker.Tests
                 var analyzerConfigField = configManagerType.GetField("_analyzerConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 analyzerConfigField?.SetValue(null, null);
+                
+                var usingRemoverConfigField = configManagerType.GetField("_usingRemoverConfig", 
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                usingRemoverConfigField?.SetValue(null, null);
             }
             catch (Exception ex)
             {

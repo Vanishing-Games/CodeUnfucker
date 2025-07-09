@@ -40,9 +40,12 @@ namespace CodeUnfucker
                 case "csharpier":
                     FormatCodeWithCSharpier(path);
                     break;
+                case "rmusing":
+                    RemoveUnusedUsings(path);
+                    break;
                 default:
                     LogError($"未知命令: {command}");
-                    LogError("支持的命令: analyze, format, csharpier");
+                    LogError("支持的命令: analyze, format, csharpier, rmusing");
                     ShowUsage();
                     break;
             }
@@ -89,9 +92,9 @@ namespace CodeUnfucker
                 return false;
             }
 
-            if ((command == "format" || command == "csharpier") && !File.Exists(path) && !Directory.Exists(path))
+            if ((command == "format" || command == "csharpier" || command == "rmusing") && !File.Exists(path) && !Directory.Exists(path))
             {
-                LogError($"格式化模式下，路径必须是存在的文件或目录: {path}");
+                LogError($"格式化/处理模式下，路径必须是存在的文件或目录: {path}");
                 return false;
             }
 
@@ -104,9 +107,10 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker <command> <path> [--config <config-path>]");
             LogInfo("");
             LogInfo("命令:");
-            LogInfo("  analyze    - 分析代码");
-            LogInfo("  format     - 使用内置格式化器格式化代码");
-            LogInfo("  csharpier  - 使用CSharpier格式化代码");
+            LogInfo("  analyze   - 分析代码");
+            LogInfo("  format    - 使用内置格式化器格式化代码");
+            LogInfo("  csharpier - 使用CSharpier格式化代码");
+            LogInfo("  rmusing   - 移除未使用的using语句");
             LogInfo("");
             LogInfo("选项:");
             LogInfo("  --config, -c  - 指定配置文件目录路径");
@@ -115,6 +119,7 @@ namespace CodeUnfucker
             LogInfo("  CodeUnfucker analyze ./Scripts");
             LogInfo("  CodeUnfucker format ./Scripts --config ./MyConfig");
             LogInfo("  CodeUnfucker csharpier MyFile.cs");
+            LogInfo("  CodeUnfucker rmusing ./Scripts");
         }
 
         private void SetupConfig(string? configPath)
@@ -197,6 +202,90 @@ namespace CodeUnfucker
         {
             LogInfo($"开始格式化代码，扫描路径: {path}");
             FormatCodeInternal(path, false);
+        }
+
+        private void RemoveUnusedUsings(string path)
+        {
+            LogInfo($"开始移除未使用的using语句，扫描路径: {path}");
+            RemoveUnusedUsingsInternal(path);
+        }
+
+        private void RemoveUnusedUsingsInternal(string path)
+        {
+            if (File.Exists(path) && path.EndsWith(".cs"))
+            {
+                // 处理单个文件
+                RemoveUnusedUsingsFromSingleFile(path);
+            }
+            else if (Directory.Exists(path))
+            {
+                // 处理目录中的所有文件
+                RemoveUnusedUsingsFromDirectory(path);
+            }
+            else
+            {
+                LogError($"无效的路径: {path}");
+            }
+        }
+
+        private void RemoveUnusedUsingsFromSingleFile(string filePath)
+        {
+            try
+            {
+                LogInfo($"移除未使用using: {filePath}");
+                string originalCode = File.ReadAllText(filePath);
+                
+                var remover = new UsingStatementRemover();
+                string processedCode = remover.RemoveUnusedUsings(originalCode, filePath);
+
+                var config = ConfigManager.GetUsingRemoverConfig();
+                
+                // 根据配置决定是否创建备份
+                if (config.Settings.CreateBackupFiles)
+                {
+                    string backupPath = filePath + config.Settings.BackupFileExtension;
+                    File.Copy(filePath, backupPath, true);
+                    LogInfo($"已创建备份: {backupPath}");
+                }
+
+                // 写入处理后的代码
+                File.WriteAllText(filePath, processedCode);
+                LogInfo($"✅ 移除未使用using完成: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                LogError($"移除未使用using失败 {filePath}: {ex.Message}");
+            }
+        }
+
+        private void RemoveUnusedUsingsFromDirectory(string directoryPath)
+        {
+            var csFiles = GetCsFiles(directoryPath);
+            if (csFiles.Length == 0)
+            {
+                LogWarn("未找到任何 .cs 文件");
+                return;
+            }
+
+            LogInfo($"找到 {csFiles.Length} 个 .cs 文件，开始批量移除未使用using...");
+            int successCount = 0;
+            int failureCount = 0;
+            
+            foreach (var file in csFiles)
+            {
+                try
+                {
+                    RemoveUnusedUsingsFromSingleFile(file);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    LogError($"处理失败 {file}: {ex.Message}");
+                    failureCount++;
+                }
+            }
+
+            LogInfo($"移除未使用using完成！成功: {successCount}, 失败: {failureCount}");
         }
 
         private void FormatSingleFile(string filePath, bool forceCSharpier = false)

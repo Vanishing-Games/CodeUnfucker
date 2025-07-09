@@ -16,7 +16,8 @@
 
 1. **代码分析** - 静态分析C#代码并输出结果到Unity控制台
 2. **代码格式化** - 按规范重新排列类成员并添加Region宏
-3. **配置系统** - 通过JSON配置文件灵活控制所有功能
+3. **移除未使用using** - 自动检测并移除未使用的using语句
+4. **配置系统** - 通过JSON配置文件灵活控制所有功能
 
 ## 使用方法
 
@@ -38,6 +39,9 @@ dotnet run -- format <文件路径或目录路径> [--config <配置文件目录
 
 # 格式化代码（使用CSharpier）
 dotnet run -- csharpier <文件路径或目录路径> [--config <配置文件目录>]
+
+# 移除未使用的using语句
+dotnet run -- rmusing <文件路径或目录路径> [--config <配置文件目录>]
 
 # 查看帮助
 dotnet run -- help
@@ -62,6 +66,12 @@ dotnet run -- format ./Scripts --config ./MyConfig
 
 # 使用CSharpier格式化单个文件
 dotnet run -- csharpier MyFile.cs
+
+# 移除指定目录中所有未使用的using语句
+dotnet run -- rmusing ./Scripts
+
+# 移除单个文件中的未使用using语句
+dotnet run -- rmusing MyFile.cs --config ./MyConfig
 ```
 
 ### Unity Editor集成
@@ -74,6 +84,15 @@ dotnet run -- csharpier MyFile.cs
 CodeUnfucker使用JSON配置文件来控制所有功能。配置文件位于 `Config/` 目录下。
 
 ### 配置文件
+
+#### UsingRemoverConfig.json - 移除未使用using配置
+控制移除未使用using语句的行为：
+- `CreateBackupFiles`: 是否创建备份文件 (默认: true)
+- `BackupFileExtension`: 备份文件扩展名 (默认: ".backup")
+- `VerboseLogging`: 是否启用详细日志 (默认: false)
+- `SortUsings`: 是否对using语句进行排序 (默认: true)
+- `RemoveEmptyLines`: 是否移除空行 (默认: true)
+- `PreservedUsings`: 始终保留的using语句列表 (如: ["System", "UnityEngine", "UnityEditor"])
 
 #### FormatterConfig.json - 格式化配置
 控制代码格式化的所有行为：

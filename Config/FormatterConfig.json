@@ -4,7 +4,7 @@
   "FormatterSettings": {
     "MinLinesForRegion": 15,
     "EnableRegionGeneration": true,
-    "CreateBackupFiles": false,
+    "CreateBackupFiles": true,
     "BackupFileExtension": ".backup",
     "FormatterType": "Built_in"
   },

@@ -13,8 +13,10 @@ namespace CodeUnfucker
         {
             get
             {
+                // 如果显式设置了自定义配置路径，就使用它，即使路径不存在
                 if (!string.IsNullOrEmpty(_customConfigPath))
                     return _customConfigPath;
+                    
                 // 按优先级查找配置文件
                 var searchPaths = new[]
                 {
@@ -34,6 +36,8 @@ namespace CodeUnfucker
 
         private static FormatterConfig? _formatterConfig;
         private static AnalyzerConfig? _analyzerConfig;
+        private static UsingRemoverConfig? _usingRemoverConfig;
+        
         public static FormatterConfig GetFormatterConfig()
         {
             if (_formatterConfig == null)
@@ -52,6 +56,16 @@ namespace CodeUnfucker
             }
 
             return _analyzerConfig;
+        }
+
+        public static UsingRemoverConfig GetUsingRemoverConfig()
+        {
+            if (_usingRemoverConfig == null)
+            {
+                _usingRemoverConfig = LoadConfig<UsingRemoverConfig>("UsingRemoverConfig.json");
+            }
+
+            return _usingRemoverConfig;
         }
 
         private static T LoadConfig<T>(string fileName)
@@ -97,6 +111,7 @@ namespace CodeUnfucker
         {
             _formatterConfig = null;
             _analyzerConfig = null;
+            _usingRemoverConfig = null;
             Console.WriteLine("[INFO] 配置已重新加载");
         }
     }
