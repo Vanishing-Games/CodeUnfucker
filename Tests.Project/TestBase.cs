@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using Xunit;
 using FluentAssertions;
 
@@ -12,6 +13,9 @@ namespace CodeUnfucker.Tests
     /// </summary>
     public abstract class TestBase : IDisposable
     {
+        // 静态锁对象，确保ConfigManager操作的线程安全
+        private static readonly object ConfigManagerLock = new object();
+        
         protected readonly string TestTempDirectory;
         protected readonly string TestDataDirectory;
 
@@ -110,6 +114,62 @@ namespace CodeUnfucker.Tests
             ConfigManager.SetConfigPath(isolatedConfigPath);
         }
 
+        /// <summary>
+        /// 执行需要配置隔离的操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected T ExecuteWithConfigIsolation<T>(Func<T> operation)
+        {
+            lock (ConfigManagerLock)
+            {
+                // 在锁内重置ConfigManager状态
+                ResetConfigManagerInternal();
+                
+                try
+                {
+                    // 执行操作
+                    var result = operation();
+                    
+                    // 再次重置以清理状态
+                    ResetConfigManagerInternal();
+                    
+                    return result;
+                }
+                catch
+                {
+                    // 即使发生异常也要重置状态
+                    ResetConfigManagerInternal();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected void ExecuteWithConfigIsolation(Action operation)
+        {
+            lock (ConfigManagerLock)
+            {
+                // 在锁内重置ConfigManager状态
+                ResetConfigManagerInternal();
+                
+                try
+                {
+                    // 执行操作
+                    operation();
+                    
+                    // 再次重置以清理状态
+                    ResetConfigManagerInternal();
+                }
+                catch
+                {
+                    // 即使发生异常也要重置状态
+                    ResetConfigManagerInternal();
+                    throw;
+                }
+            }
+        }
+
         public virtual void Dispose()
         {
             // 重置ConfigManager的配置路径和缓存
@@ -149,14 +209,21 @@ namespace CodeUnfucker.Tests
         /// </summary>
         protected void ResetConfigManager()
         {
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+            }
+        }
+
+        /// <summary>
+        /// 内部重置ConfigManager状态的实现（不带锁）
+        /// </summary>
+        private void ResetConfigManagerInternal()
+        {
             try
             {
                 // 使用反射重置ConfigManager的私有静态字段
                 var configManagerType = typeof(ConfigManager);
-                
-                // 强制调用ReloadConfigs()方法，确保缓存被清空
-                var reloadMethod = configManagerType.GetMethod("ReloadConfigs", BindingFlags.Public | BindingFlags.Static);
-                reloadMethod?.Invoke(null, null);
                 
                 // 重置自定义配置路径
                 var customConfigPathField = configManagerType.GetField("_customConfigPath", 
@@ -176,12 +243,22 @@ namespace CodeUnfucker.Tests
                     BindingFlags.NonPublic | BindingFlags.Static);
                 usingRemoverConfigField?.SetValue(null, null);
                 
-                // 再次调用ReloadConfigs()确保状态完全重置
+                // 强制调用ReloadConfigs()方法，确保缓存被清空
+                var reloadMethod = configManagerType.GetMethod("ReloadConfigs", BindingFlags.Public | BindingFlags.Static);
                 reloadMethod?.Invoke(null, null);
+                
+                // 再次重置缓存对象确保完全清空
+                formatterConfigField?.SetValue(null, null);
+                analyzerConfigField?.SetValue(null, null);
+                usingRemoverConfigField?.SetValue(null, null);
                 
                 // 强制垃圾回收，确保没有残留的对象引用
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+                GC.Collect(); // 再次调用确保完全清理
+                
+                // 添加小延迟确保所有清理操作完成
+                Thread.Sleep(10);
             }
             catch (Exception ex)
             {

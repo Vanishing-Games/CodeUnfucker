@@ -313,37 +313,40 @@ public class TestClass
         [Fact]
         public void Run_ShouldSetupConfig_WhenConfigPathProvided()
         {
-            // Arrange
-            var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
-            Directory.CreateDirectory(configDir);
-            
-            var config = new FormatterConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                FormatterSettings = new FormatterSettings
+                // Arrange
+                var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
+                Directory.CreateDirectory(configDir);
+                
+                var config = new FormatterConfig
                 {
-                    MinLinesForRegion = 99
-                }
-            };
-            
-            var configFile = Path.Combine(configDir, "FormatterConfig.json");
-            var jsonContent = System.Text.Json.JsonSerializer.Serialize(config, new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                    FormatterSettings = new FormatterSettings
+                    {
+                        MinLinesForRegion = 99
+                    }
+                };
+                
+                var configFile = Path.Combine(configDir, "FormatterConfig.json");
+                var jsonContent = System.Text.Json.JsonSerializer.Serialize(config, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                });
+                File.WriteAllText(configFile, jsonContent);
+
+                var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
+                var program = new Program();
+                var args = new[] { "format", testFile, "--config", configDir };
+
+                // Act & Assert
+                Action runAction = () => program.Run(args);
+                runAction.Should().NotThrow();
+                
+                // 验证配置已加载
+                var loadedConfig = ConfigManager.GetFormatterConfig();
+                loadedConfig.FormatterSettings.MinLinesForRegion.Should().Be(99);
             });
-            File.WriteAllText(configFile, jsonContent);
-
-            var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
-            var program = new Program();
-            var args = new[] { "format", testFile, "--config", configDir };
-
-            // Act & Assert
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
-            
-            // 验证配置已加载
-            var loadedConfig = ConfigManager.GetFormatterConfig();
-            loadedConfig.FormatterSettings.MinLinesForRegion.Should().Be(99);
         }
 
         [Fact]

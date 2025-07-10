@@ -183,42 +183,42 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void ReloadConfigs_ShouldClearCachedConfigs()
         {
-            // Arrange - 多次重置确保完全隔离
-            ResetConfigManager();
-            ResetConfigManager(); // 双重重置确保状态清理
-            
-            var configDir = Path.Combine(TestTempDirectory, "Config");
-            Directory.CreateDirectory(configDir);
-
-            // 创建初始配置
-            var initialConfig = new FormatterConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                FormatterSettings = new FormatterSettings { MinLinesForRegion = 5 }
-            };
-            CreateTempConfigFile("FormatterConfig.json", initialConfig);
-            ConfigManager.SetConfigPath(configDir);
+                // Arrange
+                var configDir = Path.Combine(TestTempDirectory, "Config");
+                Directory.CreateDirectory(configDir);
 
-            // 加载初始配置
-            var firstLoad = ConfigManager.GetFormatterConfig();
-            firstLoad.FormatterSettings.MinLinesForRegion.Should().Be(5);
+                // 创建初始配置
+                var initialConfig = new FormatterConfig
+                {
+                    FormatterSettings = new FormatterSettings { MinLinesForRegion = 5 }
+                };
+                CreateTempConfigFile("FormatterConfig.json", initialConfig);
+                ConfigManager.SetConfigPath(configDir);
 
-            // 修改配置文件，并确保文件系统操作完成
-            var updatedConfig = new FormatterConfig
-            {
-                FormatterSettings = new FormatterSettings { MinLinesForRegion = 20 }
-            };
-            CreateTempConfigFile("FormatterConfig.json", updatedConfig);
-            
-            // 强制等待，确保文件系统操作完成
-            System.Threading.Thread.Sleep(50);
+                // 加载初始配置
+                var firstLoad = ConfigManager.GetFormatterConfig();
+                firstLoad.FormatterSettings.MinLinesForRegion.Should().Be(5);
 
-            // Act - 多次调用确保重载
-            ConfigManager.ReloadConfigs();
-            ConfigManager.ReloadConfigs(); // 双重重载确保缓存清理
-            var secondLoad = ConfigManager.GetFormatterConfig();
+                // 修改配置文件，并确保文件系统操作完成
+                var updatedConfig = new FormatterConfig
+                {
+                    FormatterSettings = new FormatterSettings { MinLinesForRegion = 20 }
+                };
+                CreateTempConfigFile("FormatterConfig.json", updatedConfig);
+                
+                // 强制等待，确保文件系统操作完成
+                System.Threading.Thread.Sleep(50);
 
-            // Assert
-            secondLoad.FormatterSettings.MinLinesForRegion.Should().Be(20);
+                // Act - 多次调用确保重载
+                ConfigManager.ReloadConfigs();
+                ConfigManager.ReloadConfigs(); // 双重重载确保缓存清理
+                var secondLoad = ConfigManager.GetFormatterConfig();
+
+                // Assert
+                secondLoad.FormatterSettings.MinLinesForRegion.Should().Be(20);
+            });
         }
 
         [Fact]
