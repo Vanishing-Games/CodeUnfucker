@@ -178,11 +178,12 @@ namespace CodeUnfucker.Tests
             // 额外确保ConfigManager状态完全重置
             try
             {
-                // 强制设置为null，确保下次获取时重新加载默认配置
+                // 设置为一个不存在的路径，确保不会意外加载配置文件
                 var configManagerType = typeof(ConfigManager);
                 var customConfigPathField = configManagerType.GetField("_customConfigPath", 
                     BindingFlags.NonPublic | BindingFlags.Static);
-                customConfigPathField?.SetValue(null, null);
+                var nonExistentPath = Path.Combine(Path.GetTempPath(), "CodeUnfucker_NonExistent_" + Guid.NewGuid());
+                customConfigPathField?.SetValue(null, nonExistentPath);
             }
             catch (Exception ex)
             {
@@ -225,11 +226,6 @@ namespace CodeUnfucker.Tests
                 // 使用反射重置ConfigManager的私有静态字段
                 var configManagerType = typeof(ConfigManager);
                 
-                // 重置自定义配置路径
-                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                customConfigPathField?.SetValue(null, null);
-                
                 // 重置缓存的配置对象 (确保完全清空)
                 var formatterConfigField = configManagerType.GetField("_formatterConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
@@ -246,6 +242,12 @@ namespace CodeUnfucker.Tests
                 // 强制调用ReloadConfigs()方法，确保缓存被清空
                 var reloadMethod = configManagerType.GetMethod("ReloadConfigs", BindingFlags.Public | BindingFlags.Static);
                 reloadMethod?.Invoke(null, null);
+                
+                // 设置一个明确不存在的配置路径，确保不会加载项目中的任何配置文件
+                var nonExistentPath = Path.Combine(TestTempDirectory, "NonExistentConfig");
+                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                customConfigPathField?.SetValue(null, nonExistentPath);
                 
                 // 再次重置缓存对象确保完全清空
                 formatterConfigField?.SetValue(null, null);
