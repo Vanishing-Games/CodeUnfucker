@@ -51,133 +51,145 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
-            var customConfig = new FormatterConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                FormatterSettings = new FormatterSettings
+                // Arrange - 首先重置ConfigManager状态
+                ResetConfigManager();
+                
+                var customConfig = new FormatterConfig
                 {
-                    MinLinesForRegion = 10,
-                    EnableRegionGeneration = false,
-                    CreateBackupFiles = false,
-                    BackupFileExtension = ".custom",
-                    FormatterType = FormatterType.CSharpier
-                },
-                RegionSettings = new RegionSettings
-                {
-                    PublicRegionName = "自定义公有",
-                    PrivateRegionName = "自定义私有"
-                }
-            };
+                    FormatterSettings = new FormatterSettings
+                    {
+                        MinLinesForRegion = 10,
+                        EnableRegionGeneration = false,
+                        CreateBackupFiles = false,
+                        BackupFileExtension = ".custom",
+                        FormatterType = FormatterType.CSharpier
+                    },
+                    RegionSettings = new RegionSettings
+                    {
+                        PublicRegionName = "自定义公有",
+                        PrivateRegionName = "自定义私有"
+                    }
+                };
 
-            CreateTempConfigFile("FormatterConfig.json", customConfig);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+                CreateTempConfigFile("FormatterConfig.json", customConfig);
+                ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
 
-            // Act
-            var config = ConfigManager.GetFormatterConfig();
+                // Act
+                var config = ConfigManager.GetFormatterConfig();
 
-            // Assert
-            config.FormatterSettings.MinLinesForRegion.Should().Be(10);
-            config.FormatterSettings.EnableRegionGeneration.Should().BeFalse();
-            config.FormatterSettings.CreateBackupFiles.Should().BeFalse();
-            config.FormatterSettings.BackupFileExtension.Should().Be(".custom");
-            config.FormatterSettings.FormatterType.Should().Be(FormatterType.CSharpier);
-            config.RegionSettings.PublicRegionName.Should().Be("自定义公有");
-            config.RegionSettings.PrivateRegionName.Should().Be("自定义私有");
+                // Assert
+                config.FormatterSettings.MinLinesForRegion.Should().Be(10);
+                config.FormatterSettings.EnableRegionGeneration.Should().BeFalse();
+                config.FormatterSettings.CreateBackupFiles.Should().BeFalse();
+                config.FormatterSettings.BackupFileExtension.Should().Be(".custom");
+                config.FormatterSettings.FormatterType.Should().Be(FormatterType.CSharpier);
+                config.RegionSettings.PublicRegionName.Should().Be("自定义公有");
+                config.RegionSettings.PrivateRegionName.Should().Be("自定义私有");
+            });
         }
 
         [Fact]
         public void GetAnalyzerConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
-            var customConfig = new AnalyzerConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                AnalyzerSettings = new AnalyzerSettings
+                // Arrange - 首先重置ConfigManager状态
+                ResetConfigManager();
+                
+                var customConfig = new AnalyzerConfig
                 {
-                    EnableSyntaxAnalysis = false,
-                    EnableSemanticAnalysis = false,
-                    ShowReferencedAssemblies = false,
-                    VerboseLogging = true
-                },
-                OutputSettings = new OutputSettings
-                {
-                    ShowFileCount = false,
-                    ShowProcessingTime = true,
-                    LogLevel = "Debug"
-                }
-            };
+                    AnalyzerSettings = new AnalyzerSettings
+                    {
+                        EnableSyntaxAnalysis = false,
+                        EnableSemanticAnalysis = false,
+                        ShowReferencedAssemblies = false,
+                        VerboseLogging = true
+                    },
+                    OutputSettings = new OutputSettings
+                    {
+                        ShowFileCount = false,
+                        ShowProcessingTime = true,
+                        LogLevel = "Debug"
+                    }
+                };
 
-            CreateTempConfigFile("AnalyzerConfig.json", customConfig);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+                CreateTempConfigFile("AnalyzerConfig.json", customConfig);
+                ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
 
-            // Act
-            var config = ConfigManager.GetAnalyzerConfig();
+                // Act
+                var config = ConfigManager.GetAnalyzerConfig();
 
-            // Assert
-            config.AnalyzerSettings.EnableSyntaxAnalysis.Should().BeFalse();
-            config.AnalyzerSettings.EnableSemanticAnalysis.Should().BeFalse();
-            config.AnalyzerSettings.ShowReferencedAssemblies.Should().BeFalse();
-            config.AnalyzerSettings.VerboseLogging.Should().BeTrue();
-            config.OutputSettings.ShowFileCount.Should().BeFalse();
-            config.OutputSettings.ShowProcessingTime.Should().BeTrue();
-            config.OutputSettings.LogLevel.Should().Be("Debug");
+                // Assert
+                config.AnalyzerSettings.EnableSyntaxAnalysis.Should().BeFalse();
+                config.AnalyzerSettings.EnableSemanticAnalysis.Should().BeFalse();
+                config.AnalyzerSettings.ShowReferencedAssemblies.Should().BeFalse();
+                config.AnalyzerSettings.VerboseLogging.Should().BeTrue();
+                config.OutputSettings.ShowFileCount.Should().BeFalse();
+                config.OutputSettings.ShowProcessingTime.Should().BeTrue();
+                config.OutputSettings.LogLevel.Should().Be("Debug");
+            });
         }
 
         [Fact]
         public void SetConfigPath_ShouldUpdateConfigPath_AndReloadConfigs()
         {
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
-            var configPath = Path.Combine(TestTempDirectory, "CustomConfig");
-            Directory.CreateDirectory(configPath);
-            
-            var customConfig = new FormatterConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                FormatterSettings = new FormatterSettings
+                // Arrange - 首先重置ConfigManager状态
+                ResetConfigManager();
+                
+                var configPath = Path.Combine(TestTempDirectory, "CustomConfig");
+                Directory.CreateDirectory(configPath);
+                
+                var customConfig = new FormatterConfig
                 {
-                    MinLinesForRegion = 99
-                }
-            };
+                    FormatterSettings = new FormatterSettings
+                    {
+                        MinLinesForRegion = 99
+                    }
+                };
 
-            var configFile = Path.Combine(configPath, "FormatterConfig.json");
-            var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                var configFile = Path.Combine(configPath, "FormatterConfig.json");
+                var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+                File.WriteAllText(configFile, jsonContent);
+
+                // Act
+                ConfigManager.SetConfigPath(configPath);
+                var config = ConfigManager.GetFormatterConfig();
+
+                // Assert
+                config.FormatterSettings.MinLinesForRegion.Should().Be(99);
             });
-            File.WriteAllText(configFile, jsonContent);
-
-            // Act
-            ConfigManager.SetConfigPath(configPath);
-            var config = ConfigManager.GetFormatterConfig();
-
-            // Assert
-            config.FormatterSettings.MinLinesForRegion.Should().Be(99);
         }
 
         [Fact]
         public void GetFormatterConfig_ShouldReturnDefaultConfig_WhenConfigFileIsInvalid()
         {
-            // Arrange - 首先重置ConfigManager状态，然后创建无效的JSON文件
-            ResetConfigManager();
-            
-            var configDir = Path.Combine(TestTempDirectory, "Config");
-            Directory.CreateDirectory(configDir);
-            var configFile = Path.Combine(configDir, "FormatterConfig.json");
-            File.WriteAllText(configFile, "{ invalid json }");
+            ExecuteWithConfigIsolation(() =>
+            {
+                // Arrange - 首先重置ConfigManager状态，然后创建无效的JSON文件
+                ResetConfigManager();
+                
+                var configDir = Path.Combine(TestTempDirectory, "Config");
+                Directory.CreateDirectory(configDir);
+                var configFile = Path.Combine(configDir, "FormatterConfig.json");
+                File.WriteAllText(configFile, "{ invalid json }");
 
-            ConfigManager.SetConfigPath(configDir);
+                ConfigManager.SetConfigPath(configDir);
 
-            // Act
-            var config = ConfigManager.GetFormatterConfig();
+                // Act
+                var config = ConfigManager.GetFormatterConfig();
 
-            // Assert
-            config.Should().NotBeNull();
-            config.FormatterSettings.MinLinesForRegion.Should().Be(15); // 默认值
+                // Assert
+                config.Should().NotBeNull();
+                config.FormatterSettings.MinLinesForRegion.Should().Be(15); // 默认值
+            });
         }
 
         [Fact]
@@ -224,30 +236,33 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadUnityLifeCycleMethods_FromConfig()
         {
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
-            var customConfig = new FormatterConfig
+            ExecuteWithConfigIsolation(() =>
             {
-                FormatterSettings = new FormatterSettings(),
-                UnityLifeCycleMethods = new() { "CustomAwake", "CustomStart", "CustomUpdate" }
-            };
+                // Arrange - 首先重置ConfigManager状态
+                ResetConfigManager();
+                
+                var customConfig = new FormatterConfig
+                {
+                    FormatterSettings = new FormatterSettings(),
+                    UnityLifeCycleMethods = new() { "CustomAwake", "CustomStart", "CustomUpdate" }
+                };
 
-            CreateTempConfigFile("FormatterConfig.json", customConfig);
-            var configDir = Path.Combine(TestTempDirectory, "Config");
-            ConfigManager.SetConfigPath(configDir);
-            
-            // 强制重新加载配置，确保不会使用缓存
-            ConfigManager.ReloadConfigs();
+                CreateTempConfigFile("FormatterConfig.json", customConfig);
+                var configDir = Path.Combine(TestTempDirectory, "Config");
+                ConfigManager.SetConfigPath(configDir);
+                
+                // 强制重新加载配置，确保不会使用缓存
+                ConfigManager.ReloadConfigs();
 
-            // Act
-            var config = ConfigManager.GetFormatterConfig();
+                // Act
+                var config = ConfigManager.GetFormatterConfig();
 
-            // Assert
-            config.UnityLifeCycleMethods.Should().Contain("CustomAwake");
-            config.UnityLifeCycleMethods.Should().Contain("CustomStart");
-            config.UnityLifeCycleMethods.Should().Contain("CustomUpdate");
-            config.UnityLifeCycleMethods.Should().HaveCount(3);
+                // Assert
+                config.UnityLifeCycleMethods.Should().Contain("CustomAwake");
+                config.UnityLifeCycleMethods.Should().Contain("CustomStart");
+                config.UnityLifeCycleMethods.Should().Contain("CustomUpdate");
+                config.UnityLifeCycleMethods.Should().HaveCount(3);
+            });
         }
 
         [Theory]
@@ -255,29 +270,32 @@ namespace CodeUnfucker.Tests
         [InlineData("CSharpier", FormatterType.CSharpier)]
         public void GetFormatterConfig_ShouldParseFormatterType_Correctly(string enumString, FormatterType expectedType)
         {
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
-            var configDir = Path.Combine(TestTempDirectory, "Config");
-            Directory.CreateDirectory(configDir);
-            var configFile = Path.Combine(configDir, "FormatterConfig.json");
-            
-            var jsonContent = $$"""
+            ExecuteWithConfigIsolation(() =>
             {
-                "formatterSettings": {
-                    "formatterType": "{{enumString}}"
+                // Arrange - 首先重置ConfigManager状态
+                ResetConfigManager();
+                
+                var configDir = Path.Combine(TestTempDirectory, "Config");
+                Directory.CreateDirectory(configDir);
+                var configFile = Path.Combine(configDir, "FormatterConfig.json");
+                
+                var jsonContent = $$"""
+                {
+                    "formatterSettings": {
+                        "formatterType": "{{enumString}}"
+                    }
                 }
-            }
-            """;
-            File.WriteAllText(configFile, jsonContent);
+                """;
+                File.WriteAllText(configFile, jsonContent);
 
-            ConfigManager.SetConfigPath(configDir);
+                ConfigManager.SetConfigPath(configDir);
 
-            // Act
-            var config = ConfigManager.GetFormatterConfig();
+                // Act
+                var config = ConfigManager.GetFormatterConfig();
 
-            // Assert
-            config.FormatterSettings.FormatterType.Should().Be(expectedType);
+                // Assert
+                config.FormatterSettings.FormatterType.Should().Be(expectedType);
+            });
         }
     }
 } 
