@@ -1,250 +1,220 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
+using CodeUnfucker.Services;
 
 namespace CodeUnfucker.Tests
 {
     /// <summary>
-    /// Program 类的单元测试
+    /// Program 类的单元测试 - 重构后版本
     /// </summary>
     public class ProgramTests : TestBase
     {
         [Fact]
-        public void ValidateArgs_ShouldParseAnalyzeCommand_Correctly()
+        public void Parse_ShouldParseAnalyzeCommand_Correctly()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "analyze", TestTempDirectory };
 
             // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out string? configPath);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            command.Should().Be("analyze");
-            path.Should().Be(TestTempDirectory);
-            configPath.Should().BeNull();
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("analyze");
+            result.Path.Should().Be(TestTempDirectory);
+            result.ConfigPath.Should().BeNull();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldParseFormatCommand_Correctly()
+        public void Parse_ShouldParseFormatCommand_Correctly()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var testFile = CreateTempFile("test.cs", "// test");
             var args = new[] { "format", testFile };
 
             // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out string? configPath);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            command.Should().Be("format");
-            path.Should().Be(testFile);
-            configPath.Should().BeNull();
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("format");
+            result.Path.Should().Be(testFile);
+            result.ConfigPath.Should().BeNull();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldParseCSharpierCommand_Correctly()
+        public void Parse_ShouldParseCSharpierCommand_Correctly()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var testFile = CreateTempFile("test.cs", "// test");
             var args = new[] { "csharpier", testFile };
 
             // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out string? configPath);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            command.Should().Be("csharpier");
-            path.Should().Be(testFile);
-            configPath.Should().BeNull();
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("csharpier");
+            result.Path.Should().Be(testFile);
+            result.ConfigPath.Should().BeNull();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldParseCommandWithConfig_Correctly()
+        public void Parse_ShouldParseCommandWithConfig_Correctly()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "analyze", TestTempDirectory, "--config", TestTempDirectory };
 
             // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out string? configPath);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            command.Should().Be("analyze");
-            path.Should().Be(TestTempDirectory);
-            configPath.Should().Be(TestTempDirectory);
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("analyze");
+            result.Path.Should().Be(TestTempDirectory);
+            result.ConfigPath.Should().Be(TestTempDirectory);
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForHelpArguments()
+        public void Parse_ShouldReturnShowHelp_ForHelpArguments()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var helpArgs = new[] { "--help" };
 
             // Act
-            var result = Program.ValidateArgs(helpArgs, out _, out _, out _);
+            var result = parser.Parse(helpArgs);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeTrue();
+            result.ShowHelp.Should().BeTrue();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForShortHelp()
+        public void Parse_ShouldReturnShowHelp_ForShortHelp()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "-h" };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeTrue();
+            result.ShowHelp.Should().BeTrue();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForHelpCommand()
+        public void Parse_ShouldReturnShowHelp_ForHelpCommand()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "help" };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeTrue();
+            result.ShowHelp.Should().BeTrue();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldSupportBackwardsCompatibility_WithSingleArgument()
+        public void Parse_ShouldSupportBackwardsCompatibility_WithSingleArgument()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { TestTempDirectory };
 
             // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out string? configPath);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            command.Should().Be("analyze");
-            path.Should().Be(TestTempDirectory);
-            configPath.Should().BeNull();
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("analyze");
+            result.Path.Should().Be(TestTempDirectory);
+            result.ConfigPath.Should().BeNull();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_WhenAnalyzePathDoesNotExist()
+        public void Parse_ShouldReturnInvalid_ForEmptyArgs()
         {
             // Arrange
-            var nonExistentPath = Path.Combine(TestTempDirectory, "nonexistent");
-            var args = new[] { "analyze", nonExistentPath };
-
-            // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
-
-            // Assert
-            result.Should().BeFalse();
-        }
-
-        [Fact]
-        public void ValidateArgs_ShouldReturnFalse_WhenFormatPathDoesNotExist()
-        {
-            // Arrange
-            var nonExistentPath = Path.Combine(TestTempDirectory, "nonexistent.cs");
-            var args = new[] { "format", nonExistentPath };
-
-            // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
-
-            // Assert
-            result.Should().BeFalse();
-        }
-
-        [Fact]
-        public void ValidateArgs_ShouldReturnTrue_WhenFormatPathIsValidFile()
-        {
-            // Arrange
-            var validFile = CreateTempFile("test.cs", "// test content");
-            var args = new[] { "format", validFile };
-
-            // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out _);
-
-            // Assert
-            result.Should().BeTrue();
-            command.Should().Be("format");
-            path.Should().Be(validFile);
-        }
-
-        [Fact]
-        public void ValidateArgs_ShouldReturnTrue_WhenFormatPathIsValidDirectory()
-        {
-            // Arrange
-            var args = new[] { "format", TestTempDirectory };
-
-            // Act
-            var result = Program.ValidateArgs(args, out string command, out string path, out _);
-
-            // Assert
-            result.Should().BeTrue();
-            command.Should().Be("format");
-            path.Should().Be(TestTempDirectory);
-        }
-
-        [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForEmptyArgs()
-        {
-            // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new string[] { };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeFalse();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForMissingPath()
+        public void Parse_ShouldReturnInvalid_ForMissingPath()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "analyze" };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeFalse();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_ForTooManyArgs()
+        public void Parse_ShouldReturnInvalid_ForTooManyArgs()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "analyze", "path", "extra" };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeFalse();
         }
 
         [Fact]
-        public void ValidateArgs_ShouldReturnFalse_WhenConfigFlagMissingValue()
+        public void Parse_ShouldReturnInvalid_WhenConfigFlagMissingValue()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var validFile = CreateTempFile("test.cs", "// test");
             var args = new[] { "format", validFile, "--config" };
 
             // Act
-            var result = Program.ValidateArgs(args, out _, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeFalse();
+            result.IsValid.Should().BeFalse();
         }
 
         [Fact]
-        public void Run_ShouldHandleAnalyzeCommand()
+        public async Task RunAsync_ShouldHandleAnalyzeCommand()
         {
             // Arrange
             CreateTempFile("TestFile.cs", @"
@@ -253,17 +223,17 @@ public class TestClass
     public void Method() { }
 }");
 
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var args = new[] { "analyze", TestTempDirectory };
 
             // Act & Assert
-            // 这个测试主要验证不会抛出异常
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
+            Func<Task> runAction = async () => await applicationService.RunAsync(args);
+            await runAction.Should().NotThrowAsync();
         }
 
         [Fact]
-        public void Run_ShouldHandleFormatCommand()
+        public async Task RunAsync_ShouldHandleFormatCommand()
         {
             // Arrange
             var testFile = CreateTempFile("TestFile.cs", @"
@@ -272,16 +242,17 @@ public class TestClass
     public void Method() { }
 }");
 
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var args = new[] { "format", testFile };
 
             // Act & Assert
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
+            Func<Task> runAction = async () => await applicationService.RunAsync(args);
+            await runAction.Should().NotThrowAsync();
         }
 
         [Fact]
-        public void Run_ShouldHandleCSharpierCommand()
+        public async Task RunAsync_ShouldHandleCSharpierCommand()
         {
             // Arrange
             var testFile = CreateTempFile("TestFile.cs", @"
@@ -290,30 +261,34 @@ public class TestClass
     public void Method() { }
 }");
 
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var args = new[] { "csharpier", testFile };
 
             // Act & Assert
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
+            Func<Task> runAction = async () => await applicationService.RunAsync(args);
+            await runAction.Should().NotThrowAsync();
         }
 
         [Fact]
-        public void Run_ShouldHandleUnknownCommand()
+        public async Task RunAsync_ShouldHandleUnknownCommand()
         {
             // Arrange
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var args = new[] { "unknown", TestTempDirectory };
 
-            // Act & Assert
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
+            // Act
+            var result = await applicationService.RunAsync(args);
+
+            // Assert
+            result.Should().BeFalse(); // 未知命令应该返回 false
         }
 
         [Fact]
-        public void Run_ShouldSetupConfig_WhenConfigPathProvided()
+        public async Task RunAsync_ShouldSetupConfig_WhenConfigPathProvided()
         {
-            ExecuteWithConfigIsolation(() =>
+            await ExecuteWithConfigIsolationAsync(async () =>
             {
                 // Arrange
                 var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
@@ -336,12 +311,15 @@ public class TestClass
                 File.WriteAllText(configFile, jsonContent);
 
                 var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
-                var program = new Program();
+                var serviceContainer = ServiceContainer.Instance;
+                var applicationService = serviceContainer.ApplicationService;
                 var args = new[] { "format", testFile, "--config", configDir };
 
-                // Act & Assert
-                Action runAction = () => program.Run(args);
-                runAction.Should().NotThrow();
+                // Act
+                var result = await applicationService.RunAsync(args);
+
+                // Assert
+                result.Should().BeTrue();
                 
                 // 验证配置已加载
                 var loadedConfig = ConfigManager.GetFormatterConfig();
@@ -350,73 +328,114 @@ public class TestClass
         }
 
         [Fact]
-        public void Run_ShouldHandleInvalidArguments()
+        public async Task RunAsync_ShouldHandleInvalidArguments()
         {
             // Arrange
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var invalidArgs = new[] { "invalid" };
 
-            // Act & Assert
-            Action runAction = () => program.Run(invalidArgs);
-            runAction.Should().NotThrow();
+            // Act
+            var result = await applicationService.RunAsync(invalidArgs);
+
+            // Assert
+            result.Should().BeFalse(); // 无效参数应该返回 false
         }
 
         [Fact]
-        public void ValidateArgs_ShouldBeCaseInsensitive_ForAnalyze()
+        public void Parse_ShouldBeCaseInsensitive_ForAnalyze()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var args = new[] { "ANALYZE", TestTempDirectory };
 
             // Act
-            var result = Program.ValidateArgs(args, out string parsedCommand, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            parsedCommand.Should().Be("ANALYZE");
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("ANALYZE");
         }
 
         [Fact]
-        public void ValidateArgs_ShouldBeCaseInsensitive_ForFormat()
+        public void Parse_ShouldBeCaseInsensitive_ForFormat()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var testFile = CreateTempFile("test.cs", "// test");
             var args = new[] { "Format", testFile };
 
             // Act
-            var result = Program.ValidateArgs(args, out string parsedCommand, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            parsedCommand.Should().Be("Format");
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("Format");
         }
 
         [Fact]
-        public void ValidateArgs_ShouldBeCaseInsensitive_ForCSharpier()
+        public void Parse_ShouldBeCaseInsensitive_ForCSharpier()
         {
             // Arrange
+            var logger = new ConsoleLogger();
+            var parser = new CommandLineParser(logger);
             var testFile = CreateTempFile("test.cs", "// test");
             var args = new[] { "CSHARPIER", testFile };
 
             // Act
-            var result = Program.ValidateArgs(args, out string parsedCommand, out _, out _);
+            var result = parser.Parse(args);
 
             // Assert
-            result.Should().BeTrue();
-            parsedCommand.Should().Be("CSHARPIER");
+            result.IsValid.Should().BeTrue();
+            result.Command.Should().Be("CSHARPIER");
         }
 
         [Fact]
-        public void Run_ShouldHandleNonExistentConfigPath()
+        public async Task RunAsync_ShouldHandleNonExistentConfigPath()
         {
             // Arrange
             var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
-            var program = new Program();
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
             var nonExistentConfigPath = Path.Combine(TestTempDirectory, "NonExistent");
             var args = new[] { "format", testFile, "--config", nonExistentConfigPath };
 
             // Act & Assert
-            Action runAction = () => program.Run(args);
-            runAction.Should().NotThrow();
+            Func<Task> runAction = async () => await applicationService.RunAsync(args);
+            await runAction.Should().NotThrowAsync();
+        }
+
+        [Fact]
+        public async Task RunAsync_ShouldReturnTrue_ForHelpCommand()
+        {
+            // Arrange
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
+            var args = new[] { "--help" };
+
+            // Act
+            var result = await applicationService.RunAsync(args);
+
+            // Assert
+            result.Should().BeTrue(); // 帮助命令应该成功
+        }
+
+        [Fact]
+        public async Task RunAsync_ShouldValidateCommandParameters()
+        {
+            // Arrange
+            var serviceContainer = ServiceContainer.Instance;
+            var applicationService = serviceContainer.ApplicationService;
+            var nonExistentPath = Path.Combine(TestTempDirectory, "nonexistent");
+            var args = new[] { "analyze", nonExistentPath };
+
+            // Act
+            var result = await applicationService.RunAsync(args);
+
+            // Assert
+            result.Should().BeFalse(); // 无效路径应该返回 false
         }
     }
 } 

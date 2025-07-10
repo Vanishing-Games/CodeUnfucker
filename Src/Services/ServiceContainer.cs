@@ -68,5 +68,13 @@ namespace CodeUnfucker.Services
         {
             _instance = null;
         }
+
+        /// <summary>
+        /// 创建独立的服务容器实例（主要用于测试）
+        /// </summary>
+        public static ServiceContainer CreateTestInstance()
+        {
+            return new ServiceContainer();
+        }
     }
 }

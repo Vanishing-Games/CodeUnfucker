@@ -173,10 +173,16 @@ static async Task<int> Main(string[] args)
    - 影响的方法：`ExecuteAsync`, `ProcessSingleFileAsync`, `ParseSyntaxTreesAsync`, `RunStaticAnalyzersAsync`
    - 原因：为未来异步操作预留，保持接口的一致性
 
+3. **测试项目更新** - 完全重写测试以适应新架构
+   - 更新：`Program.ValidateArgs` → `CommandLineParser.Parse`
+   - 更新：`program.Run` → `applicationService.RunAsync`
+   - 新增：`ExecuteWithConfigIsolationAsync` 方法支持异步测试
+
 ### 修复结果
-- ✅ 36个编译错误全部修复
+- ✅ 76个编译错误全部修复 (36个主项目 + 40个测试项目)
 - ✅ 40个警告全部修复
 - ✅ 所有平台 (ubuntu, macos, windows) 编译通过
+- ✅ 测试项目完全适配新架构
 
 ## �🔄 迁移策略
 
@@ -190,7 +196,7 @@ static async Task<int> Main(string[] args)
 2. ✅ 创建命令模式实现
 3. ✅ 重构程序入口点
 4. ✅ 修复编译错误和警告
-5. 🔲 更新单元测试以使用新架构
+5. ✅ 更新单元测试以使用新架构
 6. 🔲 添加集成测试
 7. 🔲 性能基准测试
 
@@ -250,6 +256,7 @@ static async Task<int> Main(string[] args)
 - **文件数量**: 从1个巨大文件 → 23个模块化文件
 - **代码行数**: 主文件从632行 → 26行 (减少96%)
 - **架构清晰**: 服务层 + 命令层 + 依赖注入
-- **质量保证**: 修复了36个编译错误和40个警告
+- **质量保证**: 修复了76个编译错误和40个警告
+- **测试更新**: 完全重写测试以支持新架构
 
 这次重构为项目的长期发展奠定了坚实的技术基础，大大降低了维护成本，提高了开发效率，并确保了代码的高质量标准。

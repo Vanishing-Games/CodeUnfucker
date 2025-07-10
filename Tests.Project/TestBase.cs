@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 
@@ -166,6 +167,60 @@ namespace CodeUnfucker.Tests
                     // 即使发生异常也要重置状态
                     ResetConfigManagerInternal();
                     throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的异步操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected async Task ExecuteWithConfigIsolationAsync(Func<Task> operation)
+        {
+            // 注意：由于异步操作的特性，我们不能在整个异步操作期间持有锁
+            // 所以我们需要在操作前后分别重置状态
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+            }
+            
+            try
+            {
+                // 执行异步操作
+                await operation();
+            }
+            finally
+            {
+                // 即使发生异常也要重置状态
+                lock (ConfigManagerLock)
+                {
+                    ResetConfigManagerInternal();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的异步操作并返回结果，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected async Task<T> ExecuteWithConfigIsolationAsync<T>(Func<Task<T>> operation)
+        {
+            // 注意：由于异步操作的特性，我们不能在整个异步操作期间持有锁
+            // 所以我们需要在操作前后分别重置状态
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+            }
+            
+            try
+            {
+                // 执行异步操作
+                return await operation();
+            }
+            finally
+            {
+                // 即使发生异常也要重置状态
+                lock (ConfigManagerLock)
+                {
+                    ResetConfigManagerInternal();
                 }
             }
         }
