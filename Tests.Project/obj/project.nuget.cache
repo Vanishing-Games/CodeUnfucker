@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "yfunuS55YAw=",
+  "dgSpecHash": "2DL8TP/zm2D9wTU6fJHf98z3r8derJIOTqel39FQFQgNvtScrwKooJ0mgiMLNgnULT4MVh5Rck3mQJWyPev4GA==",
   "success": true,
   "projectFilePath": "/workspace/Tests.Project/CodeUnfucker.Tests.csproj",
   "expectedPackageFiles": [
@@ -68,7 +68,7 @@
     "/home/ubuntu/.nuget/packages/system.io.compression.zipfile/4.3.0/system.io.compression.zipfile.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.io.filesystem/4.3.0/system.io.filesystem.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.io.filesystem.primitives/4.3.0/system.io.filesystem.primitives.4.3.0.nupkg.sha512",
-    "/home/ubuntu/.nuget/packages/system.io.pipelines/8.0.0/system.io.pipelines.8.0.0.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/system.io.pipelines/9.0.0/system.io.pipelines.9.0.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.linq/4.3.0/system.linq.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.linq.expressions/4.3.0/system.linq.expressions.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.net.http/4.3.0/system.net.http.4.3.0.nupkg.sha512",
@@ -100,6 +100,7 @@
     "/home/ubuntu/.nuget/packages/system.security.cryptography.x509certificates/4.3.0/system.security.cryptography.x509certificates.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.text.encoding/4.3.0/system.text.encoding.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.text.encoding.extensions/4.3.0/system.text.encoding.extensions.4.3.0.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/system.text.encodings.web/9.0.0/system.text.encodings.web.9.0.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.text.json/9.0.0/system.text.json.9.0.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.text.regularexpressions/4.3.0/system.text.regularexpressions.4.3.0.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/system.threading/4.3.0/system.threading.4.3.0.nupkg.sha512",
@@ -118,9 +119,7 @@
     "/home/ubuntu/.nuget/packages/xunit.core/2.4.2/xunit.core.2.4.2.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/xunit.extensibility.core/2.4.2/xunit.extensibility.core.2.4.2.nupkg.sha512",
     "/home/ubuntu/.nuget/packages/xunit.extensibility.execution/2.4.2/xunit.extensibility.execution.2.4.2.nupkg.sha512",
-    "/home/ubuntu/.nuget/packages/xunit.runner.visualstudio/2.4.5/xunit.runner.visualstudio.2.4.5.nupkg.sha512",
-    "/home/ubuntu/.nuget/packages/microsoft.netcore.app.ref/9.0.4/microsoft.netcore.app.ref.9.0.4.nupkg.sha512",
-    "/home/ubuntu/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.4/microsoft.aspnetcore.app.ref.9.0.4.nupkg.sha512"
+    "/home/ubuntu/.nuget/packages/xunit.runner.visualstudio/2.4.5/xunit.runner.visualstudio.2.4.5.nupkg.sha512"
   ],
   "logs": []
 }

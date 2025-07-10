@@ -202,6 +202,9 @@ public class LargeClass
 
         private void SetupTestConfig()
         {
+            // 首先完全重置ConfigManager状态
+            ResetConfigManager();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings

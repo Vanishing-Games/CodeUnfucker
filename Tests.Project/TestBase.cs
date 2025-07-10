@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using Xunit;
 using FluentAssertions;
 
@@ -12,6 +13,9 @@ namespace CodeUnfucker.Tests
     /// </summary>
     public abstract class TestBase : IDisposable
     {
+        // 静态锁对象，确保ConfigManager操作的线程安全
+        private static readonly object ConfigManagerLock = new object();
+        
         protected readonly string TestTempDirectory;
         protected readonly string TestDataDirectory;
 
@@ -23,10 +27,6 @@ namespace CodeUnfucker.Tests
             // 创建临时测试目录
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(TestTempDirectory);
-            
-            // 强制设置一个不存在的配置路径，确保不会加载项目的配置文件
-            var isolatedConfigPath = Path.Combine(TestTempDirectory, "IsolatedConfig");
-            ConfigManager.SetConfigPath(isolatedConfigPath);
 
             // 设置测试数据目录
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -105,10 +105,89 @@ namespace CodeUnfucker.Tests
             actualContent.Should().Contain(expectedText);
         }
 
+        /// <summary>
+        /// 为当前测试设置隔离的配置路径，确保不会加载项目的配置文件
+        /// </summary>
+        protected void SetIsolatedConfigPath()
+        {
+            var isolatedConfigPath = Path.Combine(TestTempDirectory, "IsolatedConfig");
+            ConfigManager.SetConfigPath(isolatedConfigPath);
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected T ExecuteWithConfigIsolation<T>(Func<T> operation)
+        {
+            lock (ConfigManagerLock)
+            {
+                // 在锁内重置ConfigManager状态
+                ResetConfigManagerInternal();
+                
+                try
+                {
+                    // 执行操作
+                    var result = operation();
+                    
+                    // 再次重置以清理状态
+                    ResetConfigManagerInternal();
+                    
+                    return result;
+                }
+                catch
+                {
+                    // 即使发生异常也要重置状态
+                    ResetConfigManagerInternal();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected void ExecuteWithConfigIsolation(Action operation)
+        {
+            lock (ConfigManagerLock)
+            {
+                // 在锁内重置ConfigManager状态
+                ResetConfigManagerInternal();
+                
+                try
+                {
+                    // 执行操作
+                    operation();
+                    
+                    // 再次重置以清理状态
+                    ResetConfigManagerInternal();
+                }
+                catch
+                {
+                    // 即使发生异常也要重置状态
+                    ResetConfigManagerInternal();
+                    throw;
+                }
+            }
+        }
+
         public virtual void Dispose()
         {
             // 重置ConfigManager的配置路径和缓存
             ResetConfigManager();
+            
+            // 额外确保ConfigManager状态完全重置
+            try
+            {
+                // 强制设置为null，确保下次获取时重新加载默认配置
+                var configManagerType = typeof(ConfigManager);
+                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                customConfigPathField?.SetValue(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"额外重置ConfigManager失败: {ex.Message}");
+            }
             
             // 清理临时目录
             if (Directory.Exists(TestTempDirectory))
@@ -128,7 +207,18 @@ namespace CodeUnfucker.Tests
         /// <summary>
         /// 重置ConfigManager状态，确保测试之间不互相影响
         /// </summary>
-        private void ResetConfigManager()
+        protected void ResetConfigManager()
+        {
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+            }
+        }
+
+        /// <summary>
+        /// 内部重置ConfigManager状态的实现（不带锁）
+        /// </summary>
+        private void ResetConfigManagerInternal()
         {
             try
             {
@@ -140,7 +230,7 @@ namespace CodeUnfucker.Tests
                     BindingFlags.NonPublic | BindingFlags.Static);
                 customConfigPathField?.SetValue(null, null);
                 
-                // 重置缓存的配置对象
+                // 重置缓存的配置对象 (确保完全清空)
                 var formatterConfigField = configManagerType.GetField("_formatterConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 formatterConfigField?.SetValue(null, null);
@@ -152,6 +242,23 @@ namespace CodeUnfucker.Tests
                 var usingRemoverConfigField = configManagerType.GetField("_usingRemoverConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 usingRemoverConfigField?.SetValue(null, null);
+                
+                // 强制调用ReloadConfigs()方法，确保缓存被清空
+                var reloadMethod = configManagerType.GetMethod("ReloadConfigs", BindingFlags.Public | BindingFlags.Static);
+                reloadMethod?.Invoke(null, null);
+                
+                // 再次重置缓存对象确保完全清空
+                formatterConfigField?.SetValue(null, null);
+                analyzerConfigField?.SetValue(null, null);
+                usingRemoverConfigField?.SetValue(null, null);
+                
+                // 强制垃圾回收，确保没有残留的对象引用
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect(); // 再次调用确保完全清理
+                
+                // 添加小延迟确保所有清理操作完成
+                Thread.Sleep(10);
             }
             catch (Exception ex)
             {

@@ -137,7 +137,9 @@ public class TestClass : MonoBehaviour
         [InlineData(FormatterType.CSharpier)]
         public void FormatCode_ShouldUseCorrectFormatter_BasedOnConfig(FormatterType formatterType)
         {
-            // Arrange
+            // Arrange - 首先完全重置ConfigManager状态
+            ResetConfigManager();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -167,7 +169,9 @@ public class TestClass : MonoBehaviour
         [Fact]
         public void FormatCode_ShouldAddRegions_WhenEnabledAndCodeIsLongEnough()
         {
-            // Arrange
+            // Arrange - 首先完全重置ConfigManager状态
+            ResetConfigManager();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -208,7 +212,9 @@ public class TestClass
         [Fact]
         public void FormatCode_ShouldNotAddRegions_WhenDisabled()
         {
-            // Arrange
+            // Arrange - 首先完全重置ConfigManager状态
+            ResetConfigManager();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -373,6 +379,9 @@ public class TestClass
 
         private void SetupTestConfig()
         {
+            // 首先完全重置ConfigManager状态
+            ResetConfigManager();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
