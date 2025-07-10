@@ -27,6 +27,7 @@ namespace CodeUnfucker
 
                 // 获取所有using指令
                 var usingDirectives = root.Usings.ToList();
+                _allOriginalUsings = new List<UsingDirectiveSyntax>(usingDirectives); // 保存原始using列表
                 if (usingDirectives.Count == 0)
                 {
                     return sourceCode; // 没有using语句，直接返回
@@ -117,19 +118,33 @@ namespace CodeUnfucker
             if (_config.PreservedUsings == null || _config.PreservedUsings.Count == 0)
                 return usings;
 
-            var allUsings = new List<UsingDirectiveSyntax>(usings);
+            var result = new List<UsingDirectiveSyntax>(usings);
 
-            // 添加配置中要保留的using
+            // 确保配置中要保留的using不会被移除
+            // 检查是否有原本不在必需列表中，但配置要求保留的using
+            var originalUsings = GetAllOriginalUsings();
             foreach (var preservedUsing in _config.PreservedUsings)
             {
-                if (!allUsings.Any(u => u.Name?.ToString() == preservedUsing))
+                // 查找原始文件中的这个using
+                var originalUsing = originalUsings.FirstOrDefault(u => 
+                    string.Equals(u.Name?.ToString(), preservedUsing, StringComparison.Ordinal));
+                
+                if (originalUsing != null && !result.Any(u => 
+                    string.Equals(u.Name?.ToString(), preservedUsing, StringComparison.Ordinal)))
                 {
-                    // 这个保留的using不在当前文件中，不需要添加
-                    continue;
+                    // 添加要保留的using，即使它在分析中被认为是未使用的
+                    result.Add(originalUsing);
                 }
             }
 
-            return allUsings;
+            return result;
+        }
+
+        private List<UsingDirectiveSyntax> _allOriginalUsings = new List<UsingDirectiveSyntax>();
+
+        private List<UsingDirectiveSyntax> GetAllOriginalUsings()
+        {
+            return _allOriginalUsings;
         }
 
         private static void LogError(string message)

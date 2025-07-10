@@ -80,7 +80,24 @@ namespace CodeUnfucker
                     return new T();
                 }
 
-                string jsonContent = File.ReadAllText(configFile);
+                string jsonContent;
+                try
+                {
+                    jsonContent = File.ReadAllText(configFile);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"[ERROR] 无法读取配置文件 {configFile}: {ex.Message}");
+                    Console.WriteLine($"[INFO] 使用默认配置");
+                    return new T();
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Console.WriteLine($"[ERROR] 没有访问配置文件的权限 {configFile}: {ex.Message}");
+                    Console.WriteLine($"[INFO] 使用默认配置");
+                    return new T();
+                }
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
@@ -89,7 +106,19 @@ namespace CodeUnfucker
                     AllowTrailingCommas = true,
                     Converters = { new JsonStringEnumConverter() }
                 };
-                var config = JsonSerializer.Deserialize<T>(jsonContent, options);
+                
+                T? config;
+                try
+                {
+                    config = JsonSerializer.Deserialize<T>(jsonContent, options);
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"[ERROR] 配置文件格式错误 {fileName}: {ex.Message}");
+                    Console.WriteLine($"[INFO] 使用默认配置");
+                    return new T();
+                }
+                
                 Console.WriteLine($"[INFO] 成功加载配置文件: {fileName}");
                 return config ?? new T();
             }
