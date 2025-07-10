@@ -1498,7 +1498,10 @@
           "System.Text.Json": "9.0.0"
         },
         "runtime": {
-          "CodeUnfucker.dll": {}
+          "CodeUnfucker.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": ""
+          }
         }
       }
     }

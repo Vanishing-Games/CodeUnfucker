@@ -181,9 +181,9 @@
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.AssemblyInfo.cs
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.csproj.CoreCompileInputs.cache
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.sourcelink.json
-/workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.csproj.CopyComplete
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.dll
 /workspace/Tests.Project/obj/Debug/net8.0/refint/CodeUnfucker.Tests.dll
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.pdb
 /workspace/Tests.Project/obj/Debug/net8.0/CodeUnfucker.Tests.genruntimeconfig.cache
 /workspace/Tests.Project/obj/Debug/net8.0/ref/CodeUnfucker.Tests.dll
+/workspace/Tests.Project/obj/Debug/net8.0/CodeUnfu.4A68C2FE.Up2Date

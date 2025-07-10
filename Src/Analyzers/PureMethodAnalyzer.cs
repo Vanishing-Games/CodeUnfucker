@@ -84,7 +84,14 @@ namespace CodeUnfucker.Analyzers
         {
             return method.AttributeLists
                 .SelectMany(al => al.Attributes)
-                .Any(attr => attr.Name.ToString().Contains("Pure"));
+                .Any(attr => 
+                {
+                    var attrName = attr.Name.ToString();
+                    return attrName.Equals("Pure", StringComparison.Ordinal) || 
+                           attrName.EndsWith(".Pure", StringComparison.Ordinal) ||
+                           attrName.Equals("PureAttribute", StringComparison.Ordinal) ||
+                           attrName.EndsWith(".PureAttribute", StringComparison.Ordinal);
+                });
         }
 
         /// <summary>
@@ -186,7 +193,8 @@ namespace CodeUnfucker.Analyzers
                 var fullName = memberAccess.ToString();
                 
                 // 检查是否调用了 Unity API 或其他有副作用的方法
-                if (_unityApiMethods.Any(api => fullName.Contains(api)))
+                // 使用更高效的查找方式，避免 O(n) 字符串操作
+                if (_unityApiMethods.Contains(fullName))
                 {
                     HasSideEffects = true;
                     return;

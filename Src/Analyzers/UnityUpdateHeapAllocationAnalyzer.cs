@@ -66,7 +66,8 @@ namespace CodeUnfucker.Analyzers
                 if (baseTypeInfo.Type != null)
                 {
                     var typeName = baseTypeInfo.Type.ToDisplayString();
-                    if (typeName.Contains("MonoBehaviour") || typeName.Contains("UnityEngine.MonoBehaviour"))
+                    if (typeName.Equals("UnityEngine.MonoBehaviour", StringComparison.Ordinal) ||
+                        typeName.Equals("MonoBehaviour", StringComparison.Ordinal))
                     {
                         return true;
                     }
@@ -74,7 +75,8 @@ namespace CodeUnfucker.Analyzers
 
                 // 如果语义分析失败，使用语法分析作为后备
                 var baseTypeName = baseType.Type.ToString();
-                if (baseTypeName.Contains("MonoBehaviour"))
+                if (baseTypeName.Equals("MonoBehaviour", StringComparison.Ordinal) ||
+                    baseTypeName.Equals("UnityEngine.MonoBehaviour", StringComparison.Ordinal))
                 {
                     return true;
                 }

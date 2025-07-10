@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using CodeUnfucker.Analyzers;
@@ -30,7 +31,7 @@ namespace CodeUnfucker
                 SetupConfig(configPath);
             }
 
-            switch (command.ToLower())
+            switch (command.ToLower(CultureInfo.InvariantCulture))
             {
                 case "analyze":
                     AnalyzeCode(path);
@@ -153,7 +154,7 @@ namespace CodeUnfucker
 
         private void FormatCodeInternal(string path, bool forceCSharpier = false)
         {
-            if (File.Exists(path) && path.EndsWith(".cs"))
+            if (File.Exists(path) && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
             {
                 // 格式化单个文件
                 FormatSingleFile(path, forceCSharpier);
@@ -365,7 +366,7 @@ namespace CodeUnfucker
 
         private void RemoveUnusedUsingsInternal(string path)
         {
-            if (File.Exists(path) && path.EndsWith(".cs"))
+            if (File.Exists(path) && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
             {
                 // 处理单个文件
                 RemoveUnusedUsingsFromSingleFile(path);
@@ -386,7 +387,22 @@ namespace CodeUnfucker
             try
             {
                 LogInfo($"移除未使用using: {filePath}");
-                string originalCode = File.ReadAllText(filePath);
+                
+                string originalCode;
+                try
+                {
+                    originalCode = File.ReadAllText(filePath);
+                }
+                catch (IOException ex)
+                {
+                    LogError($"无法读取文件 {filePath}: {ex.Message}");
+                    return;
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    LogError($"没有访问文件的权限 {filePath}: {ex.Message}");
+                    return;
+                }
                 
                 var remover = new UsingStatementRemover();
                 string processedCode = remover.RemoveUnusedUsings(originalCode, filePath);
@@ -396,14 +412,32 @@ namespace CodeUnfucker
                 // 根据配置决定是否创建备份
                 if (config.Settings.CreateBackupFiles)
                 {
-                    string backupPath = filePath + config.Settings.BackupFileExtension;
-                    File.Copy(filePath, backupPath, true);
-                    LogInfo($"已创建备份: {backupPath}");
+                    try
+                    {
+                        string backupPath = filePath + config.Settings.BackupFileExtension;
+                        File.Copy(filePath, backupPath, true);
+                        LogInfo($"已创建备份: {backupPath}");
+                    }
+                    catch (IOException ex)
+                    {
+                        LogWarn($"无法创建备份文件: {ex.Message}");
+                    }
                 }
 
                 // 写入处理后的代码
-                File.WriteAllText(filePath, processedCode);
-                LogInfo($"✅ 移除未使用using完成: {filePath}");
+                try
+                {
+                    File.WriteAllText(filePath, processedCode);
+                    LogInfo($"✅ 移除未使用using完成: {filePath}");
+                }
+                catch (IOException ex)
+                {
+                    LogError($"无法写入文件 {filePath}: {ex.Message}");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    LogError($"没有写入文件的权限 {filePath}: {ex.Message}");
+                }
             }
             catch (Exception ex)
             {
@@ -446,7 +480,23 @@ namespace CodeUnfucker
             try
             {
                 LogInfo($"格式化文件: {filePath}");
-                string originalCode = File.ReadAllText(filePath);
+                
+                string originalCode;
+                try
+                {
+                    originalCode = File.ReadAllText(filePath);
+                }
+                catch (IOException ex)
+                {
+                    LogError($"无法读取文件 {filePath}: {ex.Message}");
+                    return;
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    LogError($"没有访问文件的权限 {filePath}: {ex.Message}");
+                    return;
+                }
+                
                 string formattedCode;
                 if (forceCSharpier)
                 {
@@ -463,14 +513,32 @@ namespace CodeUnfucker
                 // 根据配置决定是否创建备份
                 if (config.FormatterSettings.CreateBackupFiles)
                 {
-                    string backupPath = filePath + config.FormatterSettings.BackupFileExtension;
-                    File.Copy(filePath, backupPath, true);
-                    LogInfo($"已创建备份: {backupPath}");
+                    try
+                    {
+                        string backupPath = filePath + config.FormatterSettings.BackupFileExtension;
+                        File.Copy(filePath, backupPath, true);
+                        LogInfo($"已创建备份: {backupPath}");
+                    }
+                    catch (IOException ex)
+                    {
+                        LogWarn($"无法创建备份文件: {ex.Message}");
+                    }
                 }
 
                 // 写入格式化后的代码
-                File.WriteAllText(filePath, formattedCode);
-                LogInfo($"✅ 格式化完成: {filePath}");
+                try
+                {
+                    File.WriteAllText(filePath, formattedCode);
+                    LogInfo($"✅ 格式化完成: {filePath}");
+                }
+                catch (IOException ex)
+                {
+                    LogError($"无法写入文件 {filePath}: {ex.Message}");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    LogError($"没有写入文件的权限 {filePath}: {ex.Message}");
+                }
             }
             catch (Exception ex)
             {
