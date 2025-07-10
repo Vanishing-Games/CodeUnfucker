@@ -119,6 +119,7 @@ namespace CodeUnfucker.Commands
                 }
             }
             
+            await Task.CompletedTask; // 保持异步签名一致性，为未来异步操作预留
             return syntaxTrees;
         }
 
@@ -213,6 +214,7 @@ namespace CodeUnfucker.Commands
             // 输出诊断结果
             OutputDiagnostics(allDiagnostics, config);
             Logger.LogInfo($"静态分析完成！分析了 {analyzedFileCount} 个文件，发现 {allDiagnostics.Count} 个问题");
+            await Task.CompletedTask; // 保持异步签名一致性，为未来异步操作预留
         }
 
         private void OutputDiagnostics(List<Diagnostic> diagnostics, AnalyzerConfig config)

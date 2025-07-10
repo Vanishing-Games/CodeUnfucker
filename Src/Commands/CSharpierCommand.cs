@@ -81,9 +81,9 @@ namespace CodeUnfucker.Commands
                 var config = ConfigManager.GetFormatterConfig();
                 
                 // 根据配置决定是否创建备份
-                if (config.Settings.CreateBackupFiles)
+                if (config.FormatterSettings.CreateBackupFiles)
                 {
-                    FileService.CreateBackup(filePath, config.Settings.BackupFileExtension);
+                    FileService.CreateBackup(filePath, config.FormatterSettings.BackupFileExtension);
                 }
 
                 // 写入格式化后的代码
@@ -91,6 +91,7 @@ namespace CodeUnfucker.Commands
                 if (writeSuccess)
                 {
                     Logger.LogInfo($"✅ CSharpier格式化完成: {filePath}");
+                    await Task.CompletedTask; // 保持异步签名一致性，为未来异步操作预留
                     return true;
                 }
                 else

@@ -91,6 +91,7 @@ namespace CodeUnfucker.Commands
                 if (writeSuccess)
                 {
                     Logger.LogInfo($"✅ 移除未使用using完成: {filePath}");
+                    await Task.CompletedTask; // 保持异步签名一致性，为未来异步操作预留
                     return true;
                 }
                 else

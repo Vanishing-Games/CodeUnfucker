@@ -37,6 +37,7 @@ namespace CodeUnfucker.Commands
                 refactorer.RefactorCode(path);
                 
                 Logger.LogInfo("Roslynator重构完成");
+                await Task.CompletedTask; // 保持异步签名一致性，为未来异步操作预留
                 return true;
             }
             catch (Exception ex)
