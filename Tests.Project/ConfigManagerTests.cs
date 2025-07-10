@@ -14,7 +14,8 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldReturnDefaultConfig_WhenNoConfigFileExists()
         {
-            // Arrange - 使用不存在的配置目录
+            // Arrange - 首先重置ConfigManager状态，然后使用不存在的配置目录
+            ResetConfigManager();
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "NonExistent"));
 
             // Act
@@ -32,7 +33,8 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetAnalyzerConfig_ShouldReturnDefaultConfig_WhenNoConfigFileExists()
         {
-            // Arrange - 使用不存在的配置目录
+            // Arrange - 首先重置ConfigManager状态，然后使用不存在的配置目录
+            ResetConfigManager();
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "NonExistent"));
 
             // Act
@@ -49,7 +51,9 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            // Arrange
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
             var customConfig = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -86,7 +90,9 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetAnalyzerConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            // Arrange
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
             var customConfig = new AnalyzerConfig
             {
                 AnalyzerSettings = new AnalyzerSettings
@@ -123,7 +129,9 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void SetConfigPath_ShouldUpdateConfigPath_AndReloadConfigs()
         {
-            // Arrange
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
             var configPath = Path.Combine(TestTempDirectory, "CustomConfig");
             Directory.CreateDirectory(configPath);
             
@@ -154,7 +162,9 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldReturnDefaultConfig_WhenConfigFileIsInvalid()
         {
-            // Arrange - 创建无效的JSON文件
+            // Arrange - 首先重置ConfigManager状态，然后创建无效的JSON文件
+            ResetConfigManager();
+            
             var configDir = Path.Combine(TestTempDirectory, "Config");
             Directory.CreateDirectory(configDir);
             var configFile = Path.Combine(configDir, "FormatterConfig.json");
@@ -173,7 +183,10 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void ReloadConfigs_ShouldClearCachedConfigs()
         {
-            // Arrange
+            // Arrange - 多次重置确保完全隔离
+            ResetConfigManager();
+            ResetConfigManager(); // 双重重置确保状态清理
+            
             var configDir = Path.Combine(TestTempDirectory, "Config");
             Directory.CreateDirectory(configDir);
 
@@ -189,15 +202,19 @@ namespace CodeUnfucker.Tests
             var firstLoad = ConfigManager.GetFormatterConfig();
             firstLoad.FormatterSettings.MinLinesForRegion.Should().Be(5);
 
-            // 修改配置文件
+            // 修改配置文件，并确保文件系统操作完成
             var updatedConfig = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings { MinLinesForRegion = 20 }
             };
             CreateTempConfigFile("FormatterConfig.json", updatedConfig);
+            
+            // 强制等待，确保文件系统操作完成
+            System.Threading.Thread.Sleep(50);
 
-            // Act
+            // Act - 多次调用确保重载
             ConfigManager.ReloadConfigs();
+            ConfigManager.ReloadConfigs(); // 双重重载确保缓存清理
             var secondLoad = ConfigManager.GetFormatterConfig();
 
             // Assert
@@ -207,7 +224,9 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadUnityLifeCycleMethods_FromConfig()
         {
-            // Arrange
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
             var customConfig = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings(),
@@ -236,7 +255,9 @@ namespace CodeUnfucker.Tests
         [InlineData("CSharpier", FormatterType.CSharpier)]
         public void GetFormatterConfig_ShouldParseFormatterType_Correctly(string enumString, FormatterType expectedType)
         {
-            // Arrange
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
             var configDir = Path.Combine(TestTempDirectory, "Config");
             Directory.CreateDirectory(configDir);
             var configFile = Path.Combine(configDir, "FormatterConfig.json");

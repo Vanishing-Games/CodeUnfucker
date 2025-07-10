@@ -154,12 +154,16 @@ namespace CodeUnfucker.Tests
                 // 使用反射重置ConfigManager的私有静态字段
                 var configManagerType = typeof(ConfigManager);
                 
+                // 强制调用ReloadConfigs()方法，确保缓存被清空
+                var reloadMethod = configManagerType.GetMethod("ReloadConfigs", BindingFlags.Public | BindingFlags.Static);
+                reloadMethod?.Invoke(null, null);
+                
                 // 重置自定义配置路径
                 var customConfigPathField = configManagerType.GetField("_customConfigPath", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 customConfigPathField?.SetValue(null, null);
                 
-                // 重置缓存的配置对象
+                // 重置缓存的配置对象 (确保完全清空)
                 var formatterConfigField = configManagerType.GetField("_formatterConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 formatterConfigField?.SetValue(null, null);
@@ -171,6 +175,13 @@ namespace CodeUnfucker.Tests
                 var usingRemoverConfigField = configManagerType.GetField("_usingRemoverConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 usingRemoverConfigField?.SetValue(null, null);
+                
+                // 再次调用ReloadConfigs()确保状态完全重置
+                reloadMethod?.Invoke(null, null);
+                
+                // 强制垃圾回收，确保没有残留的对象引用
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
             catch (Exception ex)
             {
