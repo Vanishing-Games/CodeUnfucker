@@ -26,6 +26,8 @@
 - [x] **ApplicationService测试** - 替换原 `program.Run` 测试
 - [x] **异步测试支持** - 新增 `ExecuteWithConfigIsolationAsync` 方法
 - [x] **服务容器测试** - 支持测试隔离的 `CreateTestInstance` 方法
+- [x] **测试隔离修复** - 添加 `ServiceContainer.Reset()` 确保测试间隔离
+- [x] **配置测试简化** - 简化复杂的配置隔离测试逻辑
 
 ### 📁 文件结构验证
 ```

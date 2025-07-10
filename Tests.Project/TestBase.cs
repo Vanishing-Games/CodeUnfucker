@@ -25,6 +25,18 @@ namespace CodeUnfucker.Tests
             // 首先重置ConfigManager状态，确保每个测试都从干净状态开始
             ResetConfigManager();
             
+            // 重置ServiceContainer状态，确保测试隔离
+            try
+            {
+                var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                resetMethod?.Invoke(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+            }
+            
             // 创建临时测试目录
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(TestTempDirectory);
@@ -181,6 +193,17 @@ namespace CodeUnfucker.Tests
             lock (ConfigManagerLock)
             {
                 ResetConfigManagerInternal();
+                // 同时重置ServiceContainer状态
+                try
+                {
+                    var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                    var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                    resetMethod?.Invoke(null, null);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+                }
             }
             
             try
@@ -194,6 +217,17 @@ namespace CodeUnfucker.Tests
                 lock (ConfigManagerLock)
                 {
                     ResetConfigManagerInternal();
+                    // 同时重置ServiceContainer状态
+                    try
+                    {
+                        var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                        var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                        resetMethod?.Invoke(null, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+                    }
                 }
             }
         }
@@ -229,6 +263,18 @@ namespace CodeUnfucker.Tests
         {
             // 重置ConfigManager的配置路径和缓存
             ResetConfigManager();
+            
+            // 重置ServiceContainer状态
+            try
+            {
+                var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                resetMethod?.Invoke(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+            }
             
             // 额外确保ConfigManager状态完全重置
             try
