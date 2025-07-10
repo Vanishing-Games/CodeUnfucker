@@ -147,7 +147,7 @@ namespace CodeUnfucker.Tests
         /// <summary>
         /// 重置ConfigManager状态，确保测试之间不互相影响
         /// </summary>
-        private void ResetConfigManager()
+        protected void ResetConfigManager()
         {
             try
             {

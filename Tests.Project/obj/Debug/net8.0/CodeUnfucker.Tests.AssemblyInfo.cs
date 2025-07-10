@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CodeUnfucker.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e21faeb765d277301047fe9bf72765db53a8c551")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c6808b5d315acd0a90fb5888998bbae45d7fcd6")]
 [assembly: System.Reflection.AssemblyProductAttribute("CodeUnfucker.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CodeUnfucker.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
