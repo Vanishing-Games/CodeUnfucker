@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 
@@ -23,6 +24,18 @@ namespace CodeUnfucker.Tests
         {
             // 首先重置ConfigManager状态，确保每个测试都从干净状态开始
             ResetConfigManager();
+            
+            // 重置ServiceContainer状态，确保测试隔离
+            try
+            {
+                var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                resetMethod?.Invoke(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+            }
             
             // 创建临时测试目录
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
@@ -170,10 +183,98 @@ namespace CodeUnfucker.Tests
             }
         }
 
+        /// <summary>
+        /// 执行需要配置隔离的异步操作，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected async Task ExecuteWithConfigIsolationAsync(Func<Task> operation)
+        {
+            // 注意：由于异步操作的特性，我们不能在整个异步操作期间持有锁
+            // 所以我们需要在操作前后分别重置状态
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+                // 同时重置ServiceContainer状态
+                try
+                {
+                    var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                    var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                    resetMethod?.Invoke(null, null);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+                }
+            }
+            
+            try
+            {
+                // 执行异步操作
+                await operation();
+            }
+            finally
+            {
+                // 即使发生异常也要重置状态
+                lock (ConfigManagerLock)
+                {
+                    ResetConfigManagerInternal();
+                    // 同时重置ServiceContainer状态
+                    try
+                    {
+                        var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                        var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                        resetMethod?.Invoke(null, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行需要配置隔离的异步操作并返回结果，确保ConfigManager状态不被其他并发测试影响
+        /// </summary>
+        protected async Task<T> ExecuteWithConfigIsolationAsync<T>(Func<Task<T>> operation)
+        {
+            // 注意：由于异步操作的特性，我们不能在整个异步操作期间持有锁
+            // 所以我们需要在操作前后分别重置状态
+            lock (ConfigManagerLock)
+            {
+                ResetConfigManagerInternal();
+            }
+            
+            try
+            {
+                // 执行异步操作
+                return await operation();
+            }
+            finally
+            {
+                // 即使发生异常也要重置状态
+                lock (ConfigManagerLock)
+                {
+                    ResetConfigManagerInternal();
+                }
+            }
+        }
+
         public virtual void Dispose()
         {
             // 重置ConfigManager的配置路径和缓存
             ResetConfigManager();
+            
+            // 重置ServiceContainer状态
+            try
+            {
+                var serviceContainerType = typeof(CodeUnfucker.Services.ServiceContainer);
+                var resetMethod = serviceContainerType.GetMethod("Reset", BindingFlags.Public | BindingFlags.Static);
+                resetMethod?.Invoke(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"重置ServiceContainer失败: {ex.Message}");
+            }
             
             // 额外确保ConfigManager状态完全重置
             try

@@ -1499,8 +1499,8 @@
         },
         "runtime": {
           "CodeUnfucker.dll": {
-            "assemblyVersion": "1.0.0",
-            "fileVersion": ""
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
           }
         }
       }
