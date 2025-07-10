@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 using CodeUnfucker.Services;
+using CodeUnfucker.Commands;
 
 namespace CodeUnfucker.Tests
 {
@@ -12,11 +13,18 @@ namespace CodeUnfucker.Tests
     /// </summary>
     public class ProgramTests : TestBase
     {
-        public override void Dispose()
+        // 移除Dispose重写，因为现在不使用单例ServiceContainer了
+        
+        /// <summary>
+        /// 创建独立的ApplicationService实例，避免单例状态污染
+        /// </summary>
+        private ApplicationService CreateApplicationService()
         {
-            // 确保每个测试后重置ServiceContainer状态
-            ServiceContainer.Reset();
-            base.Dispose();
+            var logger = new ConsoleLogger();
+            var fileService = new FileService(logger);
+            var commandLineParser = new CommandLineParser(logger);
+            var commandRegistry = new CommandRegistry(logger, fileService);
+            return new ApplicationService(logger, fileService, commandLineParser, commandRegistry);
         }
         [Fact]
         public void Parse_ShouldParseAnalyzeCommand_Correctly()
@@ -223,15 +231,13 @@ namespace CodeUnfucker.Tests
         public async Task RunAsync_ShouldHandleAnalyzeCommand()
         {
             // Arrange
-            ServiceContainer.Reset(); // 确保干净状态
             CreateTempFile("TestFile.cs", @"
 public class TestClass
 {
     public void Method() { }
 }");
 
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "analyze", TestTempDirectory };
 
             // Act & Assert
@@ -243,15 +249,13 @@ public class TestClass
         public async Task RunAsync_ShouldHandleFormatCommand()
         {
             // Arrange
-            ServiceContainer.Reset(); // 确保干净状态
             var testFile = CreateTempFile("TestFile.cs", @"
 public class TestClass
 {
     public void Method() { }
 }");
 
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "format", testFile };
 
             // Act & Assert
@@ -269,8 +273,7 @@ public class TestClass
     public void Method() { }
 }");
 
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "csharpier", testFile };
 
             // Act & Assert
@@ -282,9 +285,7 @@ public class TestClass
         public async Task RunAsync_ShouldHandleUnknownCommand()
         {
             // Arrange
-            ServiceContainer.Reset(); // 确保干净状态
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "unknown", TestTempDirectory };
 
             // Act
@@ -297,16 +298,12 @@ public class TestClass
         [Fact]
         public async Task RunAsync_ShouldSetupConfig_WhenConfigPathProvided()
         {
-            // 简化测试，只验证配置路径不会导致崩溃
+            // Arrange
             var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
             Directory.CreateDirectory(configDir);
             
             var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
-            
-            // 重置ServiceContainer确保干净状态
-            ServiceContainer.Reset();
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "format", testFile, "--config", configDir };
 
             // Act
@@ -320,8 +317,7 @@ public class TestClass
         public async Task RunAsync_ShouldHandleInvalidArguments()
         {
             // Arrange
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var invalidArgs = new[] { "invalid" };
 
             // Act
@@ -386,8 +382,7 @@ public class TestClass
         {
             // Arrange
             var testFile = CreateTempFile("TestFile.cs", "public class Test { }");
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var nonExistentConfigPath = Path.Combine(TestTempDirectory, "NonExistent");
             var args = new[] { "format", testFile, "--config", nonExistentConfigPath };
 
@@ -400,9 +395,7 @@ public class TestClass
         public async Task RunAsync_ShouldReturnTrue_ForHelpCommand()
         {
             // Arrange
-            ServiceContainer.Reset(); // 确保干净状态
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var args = new[] { "--help" };
 
             // Act
@@ -416,9 +409,7 @@ public class TestClass
         public async Task RunAsync_ShouldValidateCommandParameters()
         {
             // Arrange
-            ServiceContainer.Reset(); // 确保干净状态
-            var serviceContainer = ServiceContainer.Instance;
-            var applicationService = serviceContainer.ApplicationService;
+            var applicationService = CreateApplicationService();
             var nonExistentPath = Path.Combine(TestTempDirectory, "nonexistent_directory_that_should_not_exist");
             
             // 确保路径确实不存在

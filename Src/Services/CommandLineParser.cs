@@ -46,10 +46,18 @@ namespace CodeUnfucker.Services
 
             if (args.Length == 1)
             {
-                // 向后兼容：如果只有一个参数，默认为analyze命令
-                result.Command = "analyze";
-                result.Path = args[0];
-                result.IsValid = true;
+                // 检查是否是已知命令，如果是则无效（缺少路径）
+                if (IsKnownCommand(args[0]))
+                {
+                    result.IsValid = false;
+                }
+                else
+                {
+                    // 向后兼容：如果只有一个参数且不是命令，默认为analyze命令
+                    result.Command = "analyze";
+                    result.Path = args[0];
+                    result.IsValid = true;
+                }
             }
             else if (args.Length == 2)
             {
@@ -70,6 +78,17 @@ namespace CodeUnfucker.Services
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 检查是否是已知命令
+        /// </summary>
+        /// <param name="command">命令字符串</param>
+        /// <returns>是否是已知命令</returns>
+        private bool IsKnownCommand(string command)
+        {
+            var knownCommands = new[] { "analyze", "format", "csharpier", "rmusing", "roslynator" };
+            return Array.Exists(knownCommands, cmd => string.Equals(cmd, command, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
