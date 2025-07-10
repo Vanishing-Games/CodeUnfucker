@@ -202,6 +202,9 @@ public class LargeClass
 
         private void SetupTestConfig()
         {
+            // 首先确保从干净的状态开始
+            SetIsolatedConfigPath();
+            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings

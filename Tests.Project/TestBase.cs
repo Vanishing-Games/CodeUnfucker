@@ -24,9 +24,6 @@ namespace CodeUnfucker.Tests
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(TestTempDirectory);
 
-            // 默认为每个测试设置隔离的配置路径，防止意外从项目目录加载配置
-            SetIsolatedConfigPath();
-
             // 设置测试数据目录
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             var assemblyDir = Path.GetDirectoryName(assemblyLocation)!;

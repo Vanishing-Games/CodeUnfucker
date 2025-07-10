@@ -118,7 +118,7 @@ namespace CodeUnfucker
         private SyntaxNode ApplyRefactoringRules(SyntaxNode root)
         {
             var rewriter = new RoslynatorRewriter();
-            return rewriter.Visit(root);
+            return rewriter.Visit(root) ?? root;
         }
     }
 
@@ -127,7 +127,7 @@ namespace CodeUnfucker
     /// </summary>
     internal class RoslynatorRewriter : CSharpSyntaxRewriter
     {
-        public override SyntaxNode VisitVariableDeclaration(VariableDeclarationSyntax node)
+        public override SyntaxNode? VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
             // RCS1014: 使用显式类型而不是 var（如果类型明显）
             if (node.Type.IsVar)
@@ -149,7 +149,7 @@ namespace CodeUnfucker
             return base.VisitVariableDeclaration(node);
         }
 
-        public override SyntaxNode VisitIfStatement(IfStatementSyntax node)
+        public override SyntaxNode? VisitIfStatement(IfStatementSyntax node)
         {
             // RCS1003: 添加大括号到 if-else
             if (node.Statement != null && !(node.Statement is BlockSyntax))
@@ -167,7 +167,7 @@ namespace CodeUnfucker
             return base.VisitIfStatement(node);
         }
 
-        public override SyntaxNode VisitWhileStatement(WhileStatementSyntax node)
+        public override SyntaxNode? VisitWhileStatement(WhileStatementSyntax node)
         {
             // 为 while 语句添加大括号
             if (node.Statement != null && !(node.Statement is BlockSyntax))
@@ -179,7 +179,7 @@ namespace CodeUnfucker
             return base.VisitWhileStatement(node);
         }
 
-        public override SyntaxNode VisitForStatement(ForStatementSyntax node)
+        public override SyntaxNode? VisitForStatement(ForStatementSyntax node)
         {
             // 为 for 语句添加大括号
             if (node.Statement != null && !(node.Statement is BlockSyntax))
@@ -191,7 +191,7 @@ namespace CodeUnfucker
             return base.VisitForStatement(node);
         }
 
-        public override SyntaxNode VisitForEachStatement(ForEachStatementSyntax node)
+        public override SyntaxNode? VisitForEachStatement(ForEachStatementSyntax node)
         {
             // 为 foreach 语句添加大括号
             if (node.Statement != null && !(node.Statement is BlockSyntax))
@@ -203,7 +203,7 @@ namespace CodeUnfucker
             return base.VisitForEachStatement(node);
         }
 
-        public override SyntaxNode VisitUsingStatement(UsingStatementSyntax node)
+        public override SyntaxNode? VisitUsingStatement(UsingStatementSyntax node)
         {
             // 为 using 语句添加大括号
             if (node.Statement != null && !(node.Statement is BlockSyntax))
@@ -215,7 +215,7 @@ namespace CodeUnfucker
             return base.VisitUsingStatement(node);
         }
 
-        public override SyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
+        public override SyntaxNode? VisitBinaryExpression(BinaryExpressionSyntax node)
         {
             // RCS1104: 简化条件表达式
             if (node.IsKind(SyntaxKind.EqualsExpression))
