@@ -23,10 +23,9 @@ namespace CodeUnfucker.Tests
             // 创建临时测试目录
             TestTempDirectory = Path.Combine(Path.GetTempPath(), "CodeUnfucker.Tests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(TestTempDirectory);
-            
-            // 强制设置一个不存在的配置路径，确保不会加载项目的配置文件
-            var isolatedConfigPath = Path.Combine(TestTempDirectory, "IsolatedConfig");
-            ConfigManager.SetConfigPath(isolatedConfigPath);
+
+            // 默认为每个测试设置隔离的配置路径，防止意外从项目目录加载配置
+            SetIsolatedConfigPath();
 
             // 设置测试数据目录
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -105,10 +104,33 @@ namespace CodeUnfucker.Tests
             actualContent.Should().Contain(expectedText);
         }
 
+        /// <summary>
+        /// 为当前测试设置隔离的配置路径，确保不会加载项目的配置文件
+        /// </summary>
+        protected void SetIsolatedConfigPath()
+        {
+            var isolatedConfigPath = Path.Combine(TestTempDirectory, "IsolatedConfig");
+            ConfigManager.SetConfigPath(isolatedConfigPath);
+        }
+
         public virtual void Dispose()
         {
             // 重置ConfigManager的配置路径和缓存
             ResetConfigManager();
+            
+            // 额外确保ConfigManager状态完全重置
+            try
+            {
+                // 强制设置为null，确保下次获取时重新加载默认配置
+                var configManagerType = typeof(ConfigManager);
+                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                customConfigPathField?.SetValue(null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"额外重置ConfigManager失败: {ex.Message}");
+            }
             
             // 清理临时目录
             if (Directory.Exists(TestTempDirectory))
