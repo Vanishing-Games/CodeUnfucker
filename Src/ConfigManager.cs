@@ -192,6 +192,8 @@ namespace CodeUnfucker
         public List<string> UsingDirectivesToRemove { get; set; } = new();
         public bool RemoveAllUsingDirectives { get; set; } = false;
         public bool RemoveUnusedUsingDirectives { get; set; } = true;
+        public bool CreateBackupFiles { get; set; } = true;
+        public string BackupFileExtension { get; set; } = ".backup";
         public bool RemoveUsingDirectivesWithSpecificPrefixes { get; set; } = false;
         public List<string> SpecificPrefixesToRemove { get; set; } = new();
         public bool RemoveUsingDirectivesWithSpecificSuffixes { get; set; } = false;
