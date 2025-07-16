@@ -215,22 +215,4 @@ namespace CodeUnfucker
             }
         }
     }
-
-    // 配置类
-    public class UsingRemoverConfig
-    {
-        public string Description { get; set; } = "移除未使用using语句功能配置";
-        public string Version { get; set; } = "1.0.0";
-        public UsingRemoverSettings Settings { get; set; } = new();
-        public List<string> PreservedUsings { get; set; } = new();
-    }
-
-    public class UsingRemoverSettings
-    {
-        public bool CreateBackupFiles { get; set; } = true;
-        public string BackupFileExtension { get; set; } = ".backup";
-        public bool VerboseLogging { get; set; } = false;
-        public bool SortUsings { get; set; } = true;
-        public bool RemoveEmptyLines { get; set; } = true;
-    }
 }
