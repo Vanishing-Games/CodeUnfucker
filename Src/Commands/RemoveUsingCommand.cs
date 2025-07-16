@@ -81,9 +81,9 @@ namespace CodeUnfucker.Commands
                 var config = ConfigManager.GetUsingRemoverConfig();
                 
                 // 根据配置决定是否创建备份
-                if (config.Settings.CreateBackupFiles)
+                if (config.CreateBackupFiles)
                 {
-                    FileService.CreateBackup(filePath, config.Settings.BackupFileExtension);
+                    FileService.CreateBackup(filePath, config.BackupFileExtension);
                 }
 
                 // 写入处理后的代码

@@ -115,7 +115,7 @@ namespace CodeUnfucker
 
         private List<UsingDirectiveSyntax> FilterPreservedUsings(List<UsingDirectiveSyntax> usings)
         {
-            if (_config.PreservedUsings == null || _config.PreservedUsings.Count == 0)
+            if (_config.UsingDirectivesToRemove == null || _config.UsingDirectivesToRemove.Count == 0)
                 return usings;
 
             var result = new List<UsingDirectiveSyntax>(usings);
@@ -123,7 +123,7 @@ namespace CodeUnfucker
             // 确保配置中要保留的using不会被移除
             // 检查是否有原本不在必需列表中，但配置要求保留的using
             var originalUsings = GetAllOriginalUsings();
-            foreach (var preservedUsing in _config.PreservedUsings)
+            foreach (var preservedUsing in _config.UsingDirectivesToRemove)
             {
                 // 查找原始文件中的这个using
                 var originalUsing = originalUsings.FirstOrDefault(u => 
