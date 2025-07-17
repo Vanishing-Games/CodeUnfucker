@@ -31,24 +31,6 @@ namespace CodeUnfucker.Tests
         }
 
         [Fact]
-        public void GetAnalyzerConfig_ShouldReturnDefaultConfig_WhenNoConfigFileExists()
-        {
-            // Arrange - 首先重置ConfigManager状态，然后使用不存在的配置目录
-            ResetConfigManager();
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "NonExistent"));
-
-            // Act
-            var config = ConfigManager.GetAnalyzerConfig();
-
-            // Assert
-            config.Should().NotBeNull();
-            config.AnalyzerSettings.EnableSyntaxAnalysis.Should().BeTrue();
-            config.AnalyzerSettings.EnableSemanticAnalysis.Should().BeTrue();
-            config.AnalyzerSettings.ShowReferencedAssemblies.Should().BeTrue();
-            config.OutputSettings.ShowFileCount.Should().BeTrue();
-        }
-
-        [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
             ExecuteWithConfigIsolation(() =>
@@ -78,6 +60,7 @@ namespace CodeUnfucker.Tests
 
                 // Act
                 var config = ConfigManager.GetFormatterConfig();
+                Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
 
                 // Assert
                 config.FormatterSettings.MinLinesForRegion.Should().Be(10);
@@ -87,48 +70,6 @@ namespace CodeUnfucker.Tests
                 config.FormatterSettings.FormatterType.Should().Be(FormatterType.CSharpier);
                 config.RegionSettings.PublicRegionName.Should().Be("自定义公有");
                 config.RegionSettings.PrivateRegionName.Should().Be("自定义私有");
-            });
-        }
-
-        [Fact]
-        public void GetAnalyzerConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
-        {
-            ExecuteWithConfigIsolation(() =>
-            {
-                // Arrange - 首先重置ConfigManager状态
-                ResetConfigManager();
-                
-                var customConfig = new AnalyzerConfig
-                {
-                    AnalyzerSettings = new AnalyzerSettings
-                    {
-                        EnableSyntaxAnalysis = false,
-                        EnableSemanticAnalysis = false,
-                        ShowReferencedAssemblies = false,
-                        VerboseLogging = true
-                    },
-                    OutputSettings = new OutputSettings
-                    {
-                        ShowFileCount = false,
-                        ShowProcessingTime = true,
-                        LogLevel = "Debug"
-                    }
-                };
-
-                CreateTempConfigFile("AnalyzerConfig.json", customConfig);
-                ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-
-                // Act
-                var config = ConfigManager.GetAnalyzerConfig();
-
-                // Assert
-                config.AnalyzerSettings.EnableSyntaxAnalysis.Should().BeFalse();
-                config.AnalyzerSettings.EnableSemanticAnalysis.Should().BeFalse();
-                config.AnalyzerSettings.ShowReferencedAssemblies.Should().BeFalse();
-                config.AnalyzerSettings.VerboseLogging.Should().BeTrue();
-                config.OutputSettings.ShowFileCount.Should().BeFalse();
-                config.OutputSettings.ShowProcessingTime.Should().BeTrue();
-                config.OutputSettings.LogLevel.Should().Be("Debug");
             });
         }
 

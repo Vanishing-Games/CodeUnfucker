@@ -35,7 +35,6 @@ namespace CodeUnfucker
         }
 
         private static FormatterConfig? _formatterConfig;
-        private static AnalyzerConfig? _analyzerConfig;
         private static UsingRemoverConfig? _usingRemoverConfig;
         
         public static FormatterConfig GetFormatterConfig()
@@ -46,16 +45,6 @@ namespace CodeUnfucker
             }
 
             return _formatterConfig;
-        }
-
-        public static AnalyzerConfig GetAnalyzerConfig()
-        {
-            if (_analyzerConfig == null)
-            {
-                _analyzerConfig = LoadConfig<AnalyzerConfig>("AnalyzerConfig.json");
-            }
-
-            return _analyzerConfig;
         }
 
         public static UsingRemoverConfig GetUsingRemoverConfig()
@@ -140,7 +129,6 @@ namespace CodeUnfucker
         public static void ReloadConfigs()
         {
             _formatterConfig = null;
-            _analyzerConfig = null;
             _usingRemoverConfig = null;
             Console.WriteLine("[INFO] 配置已重新加载");
         }
@@ -197,58 +185,34 @@ namespace CodeUnfucker
         public int IndentationSpaces { get; set; } = 8;
     }
 
-    public class AnalyzerConfig
+    public class UsingRemoverConfig
     {
-        public string Description { get; set; } = "CodeUnfucker 代码分析功能配置";
+        public string Description { get; set; } = "CodeUnfucker 代码移除using功能配置";
         public string Version { get; set; } = "1.0.0";
-        public AnalyzerSettings AnalyzerSettings { get; set; } = new();
-        public FileFilters FileFilters { get; set; } = new();
-        public OutputSettings OutputSettings { get; set; } = new();
-        public StaticAnalysisRules StaticAnalysisRules { get; set; } = new();
-    }
-
-    public class AnalyzerSettings
-    {
-        public bool EnableSyntaxAnalysis { get; set; } = true;
-        public bool EnableSemanticAnalysis { get; set; } = true;
-        public bool EnableDiagnostics { get; set; } = true;
-        public bool ShowReferencedAssemblies { get; set; } = true;
-        public bool VerboseLogging { get; set; } = false;
-    }
-
-    public class FileFilters
-    {
-        public List<string> IncludePatterns { get; set; } = new()
-        {
-            "*.cs"
-        };
-        public List<string> ExcludePatterns { get; set; } = new()
-        {
-            "*.Designer.cs",
-            "*.generated.cs",
-            "**/bin/**",
-            "**/obj/**",
-            "**/Temp/**"
-        };
-        public bool SearchSubdirectories { get; set; } = true;
-    }
-
-    public class OutputSettings
-    {
-        public string LogLevel { get; set; } = "Info";
-        public bool ShowFileCount { get; set; } = true;
-        public bool ShowProcessingTime { get; set; } = true;
-        public bool ShowDetailedErrors { get; set; } = true;
-    }
-
-    public class StaticAnalysisRules
-    {
-        public bool CheckNamingConventions { get; set; } = true;
-        public bool CheckCodeComplexity { get; set; } = false;
-        public bool CheckUnusedVariables { get; set; } = false;
-        public bool CheckDocumentationComments { get; set; } = false;
-        public int MaxComplexityThreshold { get; set; } = 10;
-        public bool EnablePureMethodAnalysis { get; set; } = true;
-        public bool EnableUnityHeapAllocationAnalysis { get; set; } = true;
+        public List<string> UsingDirectivesToRemove { get; set; } = new();
+        public bool RemoveAllUsingDirectives { get; set; } = false;
+        public bool RemoveUnusedUsingDirectives { get; set; } = true;
+        public bool CreateBackupFiles { get; set; } = true;
+        public string BackupFileExtension { get; set; } = ".backup";
+        public bool RemoveUsingDirectivesWithSpecificPrefixes { get; set; } = false;
+        public List<string> SpecificPrefixesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificSuffixes { get; set; } = false;
+        public List<string> SpecificSuffixesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificNames { get; set; } = false;
+        public List<string> SpecificNamesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificNamespaces { get; set; } = false;
+        public List<string> SpecificNamespacesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificTypes { get; set; } = false;
+        public List<string> SpecificTypesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificMembers { get; set; } = false;
+        public List<string> SpecificMembersToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificNamespacesAndTypes { get; set; } = false;
+        public List<string> SpecificNamespacesAndTypesToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificNamespacesAndMembers { get; set; } = false;
+        public List<string> SpecificNamespacesAndMembersToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificTypesAndMembers { get; set; } = false;
+        public List<string> SpecificTypesAndMembersToRemove { get; set; } = new();
+        public bool RemoveUsingDirectivesWithSpecificNamespacesAndTypesAndMembers { get; set; } = false;
+        public List<string> SpecificNamespacesAndTypesAndMembersToRemove { get; set; } = new();
     }
 }

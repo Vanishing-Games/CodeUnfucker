@@ -16,7 +16,6 @@ namespace CodeUnfucker.Commands
         {
             _commands = new Dictionary<string, ICommand>(StringComparer.OrdinalIgnoreCase)
             {
-                { "analyze", new AnalyzeCommand(logger, fileService) },
                 { "format", new FormatCommand(logger, fileService) },
                 { "csharpier", new CSharpierCommand(logger, fileService) },
                 { "rmusing", new RemoveUsingCommand(logger, fileService) },
