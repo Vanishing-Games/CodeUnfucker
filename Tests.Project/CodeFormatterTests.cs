@@ -151,6 +151,9 @@ public class TestClass : MonoBehaviour
 
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
 
             var formatter = new CodeFormatter();
 
@@ -189,6 +192,9 @@ public class TestClass : MonoBehaviour
 
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
 
             var formatter = new CodeFormatter();
             var longClass = @"
@@ -226,6 +232,9 @@ public class TestClass
 
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
 
             var formatter = new CodeFormatter();
 
@@ -408,6 +417,9 @@ public class TestClass
 
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
         }
     }
 } 

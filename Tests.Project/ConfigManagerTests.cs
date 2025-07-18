@@ -57,6 +57,9 @@ namespace CodeUnfucker.Tests
 
                 CreateTempConfigFile("FormatterConfig.json", customConfig);
                 ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+                
+                // 强制重新加载配置，确保不会使用缓存
+                ConfigManager.ReloadConfigs();
 
                 // Act
                 var config = ConfigManager.GetFormatterConfig();

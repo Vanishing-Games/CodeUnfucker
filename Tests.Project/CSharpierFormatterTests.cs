@@ -192,6 +192,9 @@ public class LargeClass
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
             
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
+            
             var formatter = new CSharpierFormatter();
 
             // Act & Assert
@@ -215,6 +218,9 @@ public class LargeClass
 
             CreateTempConfigFile("FormatterConfig.json", config);
             ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
         }
     }
 } 
