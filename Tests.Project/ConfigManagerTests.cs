@@ -55,11 +55,41 @@ namespace CodeUnfucker.Tests
                     }
                 };
 
-                CreateTempConfigFile("FormatterConfig.json", customConfig);
-                ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
+                // 使用与成功测试相同的方法创建配置文件
+                var configDir = Path.Combine(TestTempDirectory, "Config");
+                Directory.CreateDirectory(configDir);
+                var configFile = Path.Combine(configDir, "FormatterConfig.json");
+                var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+                File.WriteAllText(configFile, jsonContent);
+                
+                ConfigManager.SetConfigPath(configDir);
                 
                 // 强制重新加载配置，确保不会使用缓存
                 ConfigManager.ReloadConfigs();
+
+                // 验证配置文件是否被正确创建
+                Console.WriteLine($"配置文件路径: {configFile}");
+                Console.WriteLine($"配置文件是否存在: {File.Exists(configFile)}");
+                if (File.Exists(configFile))
+                {
+                    Console.WriteLine($"配置文件内容: {File.ReadAllText(configFile)}");
+                }
+
+                // 验证ConfigManager使用的配置路径
+                var configManagerType = typeof(ConfigManager);
+                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                var actualCustomPath = customConfigPathField?.GetValue(null);
+                Console.WriteLine($"ConfigManager._customConfigPath: {actualCustomPath}");
+
+                // 验证ConfigManager实际尝试加载的配置文件路径
+                var expectedConfigFile = Path.Combine(configDir, "FormatterConfig.json");
+                Console.WriteLine($"ConfigManager应该加载的配置文件: {expectedConfigFile}");
+                Console.WriteLine($"该文件是否存在: {File.Exists(expectedConfigFile)}");
 
                 // Act
                 var config = ConfigManager.GetFormatterConfig();

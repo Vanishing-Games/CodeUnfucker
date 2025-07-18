@@ -68,7 +68,7 @@ namespace CodeUnfucker.Tests
             Directory.CreateDirectory(configDir);
             
             var filePath = Path.Combine(configDir, fileName);
-            // 使用与ConfigManager相同的序列化选项
+            // 使用与ConfigManager完全相同的序列化选项
             var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
             {
                 WriteIndented = true,
