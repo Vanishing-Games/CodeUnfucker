@@ -45,8 +45,8 @@ namespace CodeUnfucker.Tests
                 }
             };
 
-            // 使用与成功测试相同的方法创建配置文件
-            var configDir = Path.Combine(TestTempDirectory, "Config");
+            // 使用与成功测试相同的方法创建配置文件，但使用独立的目录
+            var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
             Directory.CreateDirectory(configDir);
             var configFile = Path.Combine(configDir, "FormatterConfig.json");
             var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
@@ -90,6 +90,14 @@ namespace CodeUnfucker.Tests
             // Act
             var config = ConfigManager.GetFormatterConfig();
             Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
+            
+            // 验证实际加载的配置文件内容
+            var actualConfigFile = Path.Combine(actualConfigPath?.ToString() ?? "", "FormatterConfig.json");
+            Console.WriteLine($"实际加载的配置文件路径: {actualConfigFile}");
+            if (File.Exists(actualConfigFile))
+            {
+                Console.WriteLine($"实际加载的配置文件内容: {File.ReadAllText(actualConfigFile)}");
+            }
 
             // Assert
             config.FormatterSettings.MinLinesForRegion.Should().Be(10);
