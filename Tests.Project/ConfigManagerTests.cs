@@ -33,10 +33,10 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            // 不使用ExecuteWithConfigIsolation，直接管理配置状态
-            // Arrange - 首先重置ConfigManager状态
-            ResetConfigManager();
-            
+            // Arrange
+            var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_" + Guid.NewGuid());
+            Directory.CreateDirectory(configDir);
+
             var customConfig = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -44,10 +44,6 @@ namespace CodeUnfucker.Tests
                     MinLinesForRegion = 10
                 }
             };
-
-            // 使用与成功测试相同的方法创建配置文件，但使用独立的目录
-            var configDir = Path.Combine(TestTempDirectory, "CustomConfig");
-            Directory.CreateDirectory(configDir);
             var configFile = Path.Combine(configDir, "FormatterConfig.json");
             var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
             {
@@ -55,52 +51,18 @@ namespace CodeUnfucker.Tests
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             File.WriteAllText(configFile, jsonContent);
-            
+
             ConfigManager.SetConfigPath(configDir);
-            
-            // 强制重新加载配置，确保不会使用缓存
             ConfigManager.ReloadConfigs();
-
-            // 验证配置文件是否被正确创建
-            Console.WriteLine($"配置文件路径: {configFile}");
-            Console.WriteLine($"配置文件是否存在: {File.Exists(configFile)}");
-            if (File.Exists(configFile))
-            {
-                Console.WriteLine($"配置文件内容: {File.ReadAllText(configFile)}");
-            }
-
-            // 验证ConfigManager使用的配置路径
-            var configManagerType = typeof(ConfigManager);
-            var customConfigPathField = configManagerType.GetField("_customConfigPath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            var actualCustomPath = customConfigPathField?.GetValue(null);
-            Console.WriteLine($"ConfigManager._customConfigPath: {actualCustomPath}");
-
-            // 验证ConfigManager实际尝试加载的配置文件路径
-            var expectedConfigFile = Path.Combine(configDir, "FormatterConfig.json");
-            Console.WriteLine($"ConfigManager应该加载的配置文件: {expectedConfigFile}");
-            Console.WriteLine($"该文件是否存在: {File.Exists(expectedConfigFile)}");
-
-            // 验证ConfigPath属性返回的值
-            var configPathProperty = configManagerType.GetProperty("ConfigPath", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            var actualConfigPath = configPathProperty?.GetValue(null);
-            Console.WriteLine($"ConfigManager.ConfigPath: {actualConfigPath}");
 
             // Act
             var config = ConfigManager.GetFormatterConfig();
-            Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
-            
-            // 验证实际加载的配置文件内容
-            var actualConfigFile = Path.Combine(actualConfigPath?.ToString() ?? "", "FormatterConfig.json");
-            Console.WriteLine($"实际加载的配置文件路径: {actualConfigFile}");
-            if (File.Exists(actualConfigFile))
-            {
-                Console.WriteLine($"实际加载的配置文件内容: {File.ReadAllText(actualConfigFile)}");
-            }
 
             // Assert
             config.FormatterSettings.MinLinesForRegion.Should().Be(10);
+
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]
