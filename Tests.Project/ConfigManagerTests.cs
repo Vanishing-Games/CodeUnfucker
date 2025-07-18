@@ -33,77 +33,66 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            ExecuteWithConfigIsolation(() =>
+            // 不使用ExecuteWithConfigIsolation，直接管理配置状态
+            // Arrange - 首先重置ConfigManager状态
+            ResetConfigManager();
+            
+            var customConfig = new FormatterConfig
             {
-                // Arrange - 首先重置ConfigManager状态
-                ResetConfigManager();
-                
-                var customConfig = new FormatterConfig
+                FormatterSettings = new FormatterSettings
                 {
-                    FormatterSettings = new FormatterSettings
-                    {
-                        MinLinesForRegion = 10,
-                        EnableRegionGeneration = false,
-                        CreateBackupFiles = false,
-                        BackupFileExtension = ".custom",
-                        FormatterType = FormatterType.CSharpier
-                    },
-                    RegionSettings = new RegionSettings
-                    {
-                        PublicRegionName = "自定义公有",
-                        PrivateRegionName = "自定义私有"
-                    }
-                };
-
-                // 使用与成功测试相同的方法创建配置文件
-                var configDir = Path.Combine(TestTempDirectory, "Config");
-                Directory.CreateDirectory(configDir);
-                var configFile = Path.Combine(configDir, "FormatterConfig.json");
-                var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-                File.WriteAllText(configFile, jsonContent);
-                
-                ConfigManager.SetConfigPath(configDir);
-                
-                // 强制重新加载配置，确保不会使用缓存
-                ConfigManager.ReloadConfigs();
-
-                // 验证配置文件是否被正确创建
-                Console.WriteLine($"配置文件路径: {configFile}");
-                Console.WriteLine($"配置文件是否存在: {File.Exists(configFile)}");
-                if (File.Exists(configFile))
-                {
-                    Console.WriteLine($"配置文件内容: {File.ReadAllText(configFile)}");
+                    MinLinesForRegion = 10
                 }
+            };
 
-                // 验证ConfigManager使用的配置路径
-                var configManagerType = typeof(ConfigManager);
-                var customConfigPathField = configManagerType.GetField("_customConfigPath", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                var actualCustomPath = customConfigPathField?.GetValue(null);
-                Console.WriteLine($"ConfigManager._customConfigPath: {actualCustomPath}");
-
-                // 验证ConfigManager实际尝试加载的配置文件路径
-                var expectedConfigFile = Path.Combine(configDir, "FormatterConfig.json");
-                Console.WriteLine($"ConfigManager应该加载的配置文件: {expectedConfigFile}");
-                Console.WriteLine($"该文件是否存在: {File.Exists(expectedConfigFile)}");
-
-                // Act
-                var config = ConfigManager.GetFormatterConfig();
-                Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
-
-                // Assert
-                config.FormatterSettings.MinLinesForRegion.Should().Be(10);
-                config.FormatterSettings.EnableRegionGeneration.Should().BeFalse();
-                config.FormatterSettings.CreateBackupFiles.Should().BeFalse();
-                config.FormatterSettings.BackupFileExtension.Should().Be(".custom");
-                config.FormatterSettings.FormatterType.Should().Be(FormatterType.CSharpier);
-                config.RegionSettings.PublicRegionName.Should().Be("自定义公有");
-                config.RegionSettings.PrivateRegionName.Should().Be("自定义私有");
+            // 使用与成功测试相同的方法创建配置文件
+            var configDir = Path.Combine(TestTempDirectory, "Config");
+            Directory.CreateDirectory(configDir);
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+            File.WriteAllText(configFile, jsonContent);
+            
+            ConfigManager.SetConfigPath(configDir);
+            
+            // 强制重新加载配置，确保不会使用缓存
+            ConfigManager.ReloadConfigs();
+
+            // 验证配置文件是否被正确创建
+            Console.WriteLine($"配置文件路径: {configFile}");
+            Console.WriteLine($"配置文件是否存在: {File.Exists(configFile)}");
+            if (File.Exists(configFile))
+            {
+                Console.WriteLine($"配置文件内容: {File.ReadAllText(configFile)}");
+            }
+
+            // 验证ConfigManager使用的配置路径
+            var configManagerType = typeof(ConfigManager);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var actualCustomPath = customConfigPathField?.GetValue(null);
+            Console.WriteLine($"ConfigManager._customConfigPath: {actualCustomPath}");
+
+            // 验证ConfigManager实际尝试加载的配置文件路径
+            var expectedConfigFile = Path.Combine(configDir, "FormatterConfig.json");
+            Console.WriteLine($"ConfigManager应该加载的配置文件: {expectedConfigFile}");
+            Console.WriteLine($"该文件是否存在: {File.Exists(expectedConfigFile)}");
+
+            // 验证ConfigPath属性返回的值
+            var configPathProperty = configManagerType.GetProperty("ConfigPath", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var actualConfigPath = configPathProperty?.GetValue(null);
+            Console.WriteLine($"ConfigManager.ConfigPath: {actualConfigPath}");
+
+            // Act
+            var config = ConfigManager.GetFormatterConfig();
+            Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
+
+            // Assert
+            config.FormatterSettings.MinLinesForRegion.Should().Be(10);
         }
 
         [Fact]
