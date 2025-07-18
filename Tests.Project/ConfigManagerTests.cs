@@ -51,6 +51,9 @@ namespace CodeUnfucker.Tests
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             File.WriteAllText(configFile, jsonContent);
+            // 立即输出写入内容
+            Console.WriteLine($"[TEST] 写入配置文件: {configFile}");
+            Console.WriteLine($"[TEST] 写入内容: {File.ReadAllText(configFile)}");
 
             // 彻底清理ConfigManager缓存
             var configManagerType = typeof(ConfigManager);
@@ -61,6 +64,16 @@ namespace CodeUnfucker.Tests
 
             ConfigManager.SetConfigPath(configDir);
             ConfigManager.ReloadConfigs();
+
+            // 再次输出ConfigManager.ConfigPath和实际加载的文件内容
+            var configPathProperty = configManagerType.GetProperty("ConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var actualConfigPath = configPathProperty?.GetValue(null)?.ToString();
+            var actualConfigFile = Path.Combine(actualConfigPath ?? "", "FormatterConfig.json");
+            Console.WriteLine($"[TEST] ConfigManager.ConfigPath: {actualConfigPath}");
+            if (File.Exists(actualConfigFile))
+                Console.WriteLine($"[TEST] 实际加载的配置内容: {File.ReadAllText(actualConfigFile)}");
+            else
+                Console.WriteLine($"[TEST] 实际加载的配置文件不存在: {actualConfigFile}");
 
             // Act
             var config = ConfigManager.GetFormatterConfig();
