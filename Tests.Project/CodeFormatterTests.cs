@@ -5,6 +5,7 @@ using Xunit;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Text.Json;
 
 namespace CodeUnfucker.Tests
 {
@@ -13,7 +14,7 @@ namespace CodeUnfucker.Tests
     /// </summary>
     public class CodeFormatterTests : TestBase
     {
-        private const string SampleUnorganizedClass = @"
+        private string SampleUnorganizedClass = @"
 using System;
 using UnityEngine;
 
@@ -25,12 +26,12 @@ public class TestClass : MonoBehaviour
 
     public void PublicMethod()
     {
-        Debug.Log(""Public method"");
+        Debug.Log(\"Public method\");
     }
 
     private void Start()
     {
-        Debug.Log(""Start"");
+        Debug.Log(\"Start\");
     }
 
     private void Update()
@@ -55,7 +56,7 @@ public class TestClass : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log(""Awake"");
+        Debug.Log(\"Awake\");
     }
 
     public TestClass()
@@ -132,49 +133,32 @@ public class TestClass : MonoBehaviour
             root.Should().NotBeNull();
         }
 
-        [Theory]
-        [InlineData(FormatterType.Built_in)]
-        [InlineData(FormatterType.CSharpier)]
-        public void FormatCode_ShouldUseCorrectFormatter_BasedOnConfig(FormatterType formatterType)
+        private string SetupUniqueTestConfig(FormatterConfig config)
         {
-            // Arrange - 首先完全重置ConfigManager状态
-            ResetConfigManager();
-            
-            var config = new FormatterConfig
+            var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_Unique_" + Guid.NewGuid());
+            Directory.CreateDirectory(configDir);
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
             {
-                FormatterSettings = new FormatterSettings
-                {
-                    FormatterType = formatterType,
-                    EnableRegionGeneration = false
-                }
-            };
-
-            CreateTempConfigFile("FormatterConfig.json", config);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-            
-            // 强制重新加载配置，确保不会使用缓存
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            File.WriteAllText(configFile, jsonContent);
+            // 清理ConfigManager缓存
+            var configManagerType = typeof(ConfigManager);
+            var formatterConfigField = configManagerType.GetField("_formatterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
+            ConfigManager.SetConfigPath(configDir);
             ConfigManager.ReloadConfigs();
-
-            var formatter = new CodeFormatter();
-
-            // Act
-            var result = formatter.FormatCode(SampleUnorganizedClass, "TestClass.cs");
-
-            // Assert
-            result.Should().NotBeNullOrEmpty();
-            // 对于CSharpier，由于是占位符实现，应该返回原始代码
-            if (formatterType == FormatterType.CSharpier)
-            {
-                result.Should().Be(SampleUnorganizedClass);
-            }
+            return configDir;
         }
 
         [Fact]
         public void FormatCode_ShouldAddRegions_WhenEnabledAndCodeIsLongEnough()
         {
-            // Arrange - 首先完全重置ConfigManager状态
-            ResetConfigManager();
-            
+            // Arrange
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -189,13 +173,7 @@ public class TestClass : MonoBehaviour
                     PrivateRegionName = "私有成员"
                 }
             };
-
-            CreateTempConfigFile("FormatterConfig.json", config);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-            
-            // 强制重新加载配置，确保不会使用缓存
-            ConfigManager.ReloadConfigs();
-
+            var configDir = SetupUniqueTestConfig(config);
             var formatter = new CodeFormatter();
             var longClass = @"
 public class TestClass
@@ -206,21 +184,19 @@ public class TestClass
     public void Method4() { /* line 4 */ }
     public void Method5() { /* line 5 */ }
 }";
-
             // Act
             var result = formatter.FormatCode(longClass, "TestClass.cs");
-
             // Assert
             result.Should().Contain("#region");
             result.Should().Contain("#endregion");
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]
         public void FormatCode_ShouldNotAddRegions_WhenDisabled()
         {
-            // Arrange - 首先完全重置ConfigManager状态
-            ResetConfigManager();
-            
+            // Arrange
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -229,21 +205,43 @@ public class TestClass
                     FormatterType = FormatterType.Built_in
                 }
             };
-
-            CreateTempConfigFile("FormatterConfig.json", config);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-            
-            // 强制重新加载配置，确保不会使用缓存
-            ConfigManager.ReloadConfigs();
-
+            var configDir = SetupUniqueTestConfig(config);
             var formatter = new CodeFormatter();
-
             // Act
             var result = formatter.FormatCode(SampleUnorganizedClass, "TestClass.cs");
-
             // Assert
             result.Should().NotContain("#region");
             result.Should().NotContain("#endregion");
+            // 清理
+            Directory.Delete(configDir, true);
+        }
+
+        [Theory]
+        [InlineData(FormatterType.Built_in)]
+        [InlineData(FormatterType.CSharpier)]
+        public void FormatCode_ShouldUseCorrectFormatter_BasedOnConfig(FormatterType formatterType)
+        {
+            // Arrange
+            var config = new FormatterConfig
+            {
+                FormatterSettings = new FormatterSettings
+                {
+                    FormatterType = formatterType,
+                    EnableRegionGeneration = false
+                }
+            };
+            var configDir = SetupUniqueTestConfig(config);
+            var formatter = new CodeFormatter();
+            // Act
+            var result = formatter.FormatCode(SampleUnorganizedClass, "TestClass.cs");
+            // Assert
+            result.Should().NotBeNullOrEmpty();
+            if (formatterType == FormatterType.CSharpier)
+            {
+                result.Should().Be(SampleUnorganizedClass);
+            }
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]

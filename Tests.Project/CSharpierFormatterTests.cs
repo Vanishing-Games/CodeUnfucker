@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
+using System.Text.Json;
 
 namespace CodeUnfucker.Tests
 {
@@ -177,6 +178,28 @@ public class LargeClass
             createFormatter.Should().NotThrow();
         }
 
+        private string SetupUniqueTestConfig(FormatterConfig config)
+        {
+            var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_Unique_" + Guid.NewGuid());
+            Directory.CreateDirectory(configDir);
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            File.WriteAllText(configFile, jsonContent);
+            // 清理ConfigManager缓存
+            var configManagerType = typeof(ConfigManager);
+            var formatterConfigField = configManagerType.GetField("_formatterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
+            ConfigManager.SetConfigPath(configDir);
+            ConfigManager.ReloadConfigs();
+            return configDir;
+        }
+
         [Fact]
         public void FormatCode_ShouldUseConfigFromConfigManager()
         {
@@ -188,26 +211,17 @@ public class LargeClass
                     FormatterType = FormatterType.CSharpier
                 }
             };
-            
-            CreateTempConfigFile("FormatterConfig.json", config);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-            
-            // 强制重新加载配置，确保不会使用缓存
-            ConfigManager.ReloadConfigs();
-            
+            var configDir = SetupUniqueTestConfig(config);
             var formatter = new CSharpierFormatter();
-
             // Act & Assert
-            // 当前实现应该不会抛出异常
             Action formatAction = () => formatter.FormatCode(SampleCode, "TestClass.cs");
             formatAction.Should().NotThrow();
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         private void SetupTestConfig()
         {
-            // 首先完全重置ConfigManager状态
-            ResetConfigManager();
-            
             var config = new FormatterConfig
             {
                 FormatterSettings = new FormatterSettings
@@ -215,12 +229,8 @@ public class LargeClass
                     FormatterType = FormatterType.CSharpier
                 }
             };
-
-            CreateTempConfigFile("FormatterConfig.json", config);
-            ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-            
-            // 强制重新加载配置，确保不会使用缓存
-            ConfigManager.ReloadConfigs();
+            var configDir = SetupUniqueTestConfig(config);
+            // 不再用TestTempDirectory
         }
     }
 } 
