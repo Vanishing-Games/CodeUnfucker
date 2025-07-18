@@ -79,6 +79,7 @@ namespace CodeUnfucker.Tests
             var config = ConfigManager.GetFormatterConfig();
 
             // Assert
+            Console.WriteLine($"[TEST] 实际MinLinesForRegion: {config.FormatterSettings.MinLinesForRegion}");
             config.FormatterSettings.MinLinesForRegion.Should().Be(10);
 
             // 清理
