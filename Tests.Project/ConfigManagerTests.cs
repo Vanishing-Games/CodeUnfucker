@@ -33,6 +33,13 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
+            // --- 强制清理ConfigManager静态缓存和路径 ---
+            var configManagerType = typeof(ConfigManager);
+            var formatterConfigField = configManagerType.GetField("_formatterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
+
             // Arrange
             var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_" + Guid.NewGuid());
             Directory.CreateDirectory(configDir);
@@ -63,6 +70,9 @@ namespace CodeUnfucker.Tests
 
             // 清理
             Directory.Delete(configDir, true);
+            // --- 再次清理，防止影响其他测试 ---
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
         }
 
         [Fact]
