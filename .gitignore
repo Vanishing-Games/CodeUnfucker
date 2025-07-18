@@ -1,3 +1,39 @@
-/.idea/
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build
 /bin/
 /obj/
+**/bin/
+**/obj/
+
+# Test temp
+TestResults/
+TestOutput/
+/.coverage/
+/.nyc_output/
+/.coverage*
+
+# dotnet
+*.dbmdl
+*.pdb
+*.cache
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test isolation
+CodeUnfucker.Tests/
+!TestData/
+
+# Others
+*.swp
+*.bak
+*.tmp

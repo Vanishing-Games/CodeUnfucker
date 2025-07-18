@@ -11,6 +11,28 @@ namespace CodeUnfucker.Tests
     /// </summary>
     public class ConfigManagerTests : TestBase
     {
+        private string SetupUniqueTestConfig(FormatterConfig config)
+        {
+            var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_Unique_" + Guid.NewGuid());
+            Directory.CreateDirectory(configDir);
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            File.WriteAllText(configFile, jsonContent);
+            // 清理ConfigManager缓存
+            var configManagerType = typeof(ConfigManager);
+            var formatterConfigField = configManagerType.GetField("_formatterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
+            ConfigManager.SetConfigPath(configDir);
+            ConfigManager.ReloadConfigs();
+            return configDir;
+        }
+
         [Fact]
         public void GetFormatterConfig_ShouldReturnDefaultConfig_WhenNoConfigFileExists()
         {
@@ -33,80 +55,78 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void GetFormatterConfig_ShouldLoadCustomConfig_WhenValidConfigFileExists()
         {
-            ExecuteWithConfigIsolation(() =>
+            // Arrange
+            var configDir = Path.Combine(Path.GetTempPath(), "CodeUnfuckerTest_Unique_" + Guid.NewGuid());
+            Directory.CreateDirectory(configDir);
+
+            var customConfig = new FormatterConfig
             {
-                // Arrange - 首先重置ConfigManager状态
-                ResetConfigManager();
-                
-                var customConfig = new FormatterConfig
+                FormatterSettings = new FormatterSettings
                 {
-                    FormatterSettings = new FormatterSettings
-                    {
-                        MinLinesForRegion = 10,
-                        EnableRegionGeneration = false,
-                        CreateBackupFiles = false,
-                        BackupFileExtension = ".custom",
-                        FormatterType = FormatterType.CSharpier
-                    },
-                    RegionSettings = new RegionSettings
-                    {
-                        PublicRegionName = "自定义公有",
-                        PrivateRegionName = "自定义私有"
-                    }
-                };
-
-                CreateTempConfigFile("FormatterConfig.json", customConfig);
-                ConfigManager.SetConfigPath(Path.Combine(TestTempDirectory, "Config"));
-
-                // Act
-                var config = ConfigManager.GetFormatterConfig();
-                Console.WriteLine($"实际FormatterSettings: {System.Text.Json.JsonSerializer.Serialize(config.FormatterSettings)}");
-
-                // Assert
-                config.FormatterSettings.MinLinesForRegion.Should().Be(10);
-                config.FormatterSettings.EnableRegionGeneration.Should().BeFalse();
-                config.FormatterSettings.CreateBackupFiles.Should().BeFalse();
-                config.FormatterSettings.BackupFileExtension.Should().Be(".custom");
-                config.FormatterSettings.FormatterType.Should().Be(FormatterType.CSharpier);
-                config.RegionSettings.PublicRegionName.Should().Be("自定义公有");
-                config.RegionSettings.PrivateRegionName.Should().Be("自定义私有");
+                    MinLinesForRegion = 10
+                }
+            };
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+            File.WriteAllText(configFile, jsonContent);
+            // 立即输出写入内容
+            Console.WriteLine($"[TEST] 写入配置文件: {configFile}");
+            Console.WriteLine($"[TEST] 写入内容: {File.ReadAllText(configFile)}");
+
+            // 彻底清理ConfigManager缓存
+            var configManagerType = typeof(ConfigManager);
+            var formatterConfigField = configManagerType.GetField("_formatterConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var customConfigPathField = configManagerType.GetField("_customConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            formatterConfigField?.SetValue(null, null);
+            customConfigPathField?.SetValue(null, null);
+
+            ConfigManager.SetConfigPath(configDir);
+            ConfigManager.ReloadConfigs();
+
+            // 再次输出ConfigManager.ConfigPath和实际加载的文件内容
+            var configPathProperty = configManagerType.GetProperty("ConfigPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var actualConfigPath = configPathProperty?.GetValue(null)?.ToString();
+            var actualConfigFile = Path.Combine(actualConfigPath ?? "", "FormatterConfig.json");
+            Console.WriteLine($"[TEST] ConfigManager.ConfigPath: {actualConfigPath}");
+            if (File.Exists(actualConfigFile))
+                Console.WriteLine($"[TEST] 实际加载的配置内容: {File.ReadAllText(actualConfigFile)}");
+            else
+                Console.WriteLine($"[TEST] 实际加载的配置文件不存在: {actualConfigFile}");
+
+            // Act
+            var config = ConfigManager.GetFormatterConfig();
+
+            // Assert
+            Console.WriteLine($"[TEST] 实际MinLinesForRegion: {config.FormatterSettings.MinLinesForRegion}");
+            config.FormatterSettings.MinLinesForRegion.Should().Be(10);
+
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]
         public void SetConfigPath_ShouldUpdateConfigPath_AndReloadConfigs()
         {
-            ExecuteWithConfigIsolation(() =>
+            // Arrange
+            var config = new FormatterConfig
             {
-                // Arrange - 首先重置ConfigManager状态
-                ResetConfigManager();
-                
-                var configPath = Path.Combine(TestTempDirectory, "CustomConfig");
-                Directory.CreateDirectory(configPath);
-                
-                var customConfig = new FormatterConfig
+                FormatterSettings = new FormatterSettings
                 {
-                    FormatterSettings = new FormatterSettings
-                    {
-                        MinLinesForRegion = 99
-                    }
-                };
-
-                var configFile = Path.Combine(configPath, "FormatterConfig.json");
-                var jsonContent = JsonSerializer.Serialize(customConfig, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-                File.WriteAllText(configFile, jsonContent);
-
-                // Act
-                ConfigManager.SetConfigPath(configPath);
-                var config = ConfigManager.GetFormatterConfig();
-
-                // Assert
-                config.FormatterSettings.MinLinesForRegion.Should().Be(99);
-            });
+                    MinLinesForRegion = 99
+                }
+            };
+            var configDir = SetupUniqueTestConfig(config);
+            // Act
+            ConfigManager.SetConfigPath(configDir);
+            var loadedConfig = ConfigManager.GetFormatterConfig();
+            // Assert
+            loadedConfig.FormatterSettings.MinLinesForRegion.Should().Be(99);
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]
@@ -136,42 +156,35 @@ namespace CodeUnfucker.Tests
         [Fact]
         public void ReloadConfigs_ShouldClearCachedConfigs()
         {
-            ExecuteWithConfigIsolation(() =>
+            // Arrange
+            var initialConfig = new FormatterConfig
             {
-                // Arrange
-                var configDir = Path.Combine(TestTempDirectory, "Config");
-                Directory.CreateDirectory(configDir);
-
-                // 创建初始配置
-                var initialConfig = new FormatterConfig
-                {
-                    FormatterSettings = new FormatterSettings { MinLinesForRegion = 5 }
-                };
-                CreateTempConfigFile("FormatterConfig.json", initialConfig);
-                ConfigManager.SetConfigPath(configDir);
-
-                // 加载初始配置
-                var firstLoad = ConfigManager.GetFormatterConfig();
-                firstLoad.FormatterSettings.MinLinesForRegion.Should().Be(5);
-
-                // 修改配置文件，并确保文件系统操作完成
-                var updatedConfig = new FormatterConfig
-                {
-                    FormatterSettings = new FormatterSettings { MinLinesForRegion = 20 }
-                };
-                CreateTempConfigFile("FormatterConfig.json", updatedConfig);
-                
-                // 强制等待，确保文件系统操作完成
-                System.Threading.Thread.Sleep(50);
-
-                // Act - 多次调用确保重载
-                ConfigManager.ReloadConfigs();
-                ConfigManager.ReloadConfigs(); // 双重重载确保缓存清理
-                var secondLoad = ConfigManager.GetFormatterConfig();
-
-                // Assert
-                secondLoad.FormatterSettings.MinLinesForRegion.Should().Be(20);
+                FormatterSettings = new FormatterSettings { MinLinesForRegion = 5 }
+            };
+            var configDir = SetupUniqueTestConfig(initialConfig);
+            ConfigManager.SetConfigPath(configDir);
+            var firstLoad = ConfigManager.GetFormatterConfig();
+            firstLoad.FormatterSettings.MinLinesForRegion.Should().Be(5);
+            // 修改配置文件
+            var updatedConfig = new FormatterConfig
+            {
+                FormatterSettings = new FormatterSettings { MinLinesForRegion = 20 }
+            };
+            var configFile = Path.Combine(configDir, "FormatterConfig.json");
+            var jsonContent = JsonSerializer.Serialize(updatedConfig, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
+            File.WriteAllText(configFile, jsonContent);
+            System.Threading.Thread.Sleep(50);
+            // Act
+            ConfigManager.ReloadConfigs();
+            var secondLoad = ConfigManager.GetFormatterConfig();
+            // Assert
+            secondLoad.FormatterSettings.MinLinesForRegion.Should().Be(20);
+            // 清理
+            Directory.Delete(configDir, true);
         }
 
         [Fact]

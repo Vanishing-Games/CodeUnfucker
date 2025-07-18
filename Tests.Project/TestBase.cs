@@ -68,7 +68,7 @@ namespace CodeUnfucker.Tests
             Directory.CreateDirectory(configDir);
             
             var filePath = Path.Combine(configDir, fileName);
-            // 使用与ConfigManager相同的序列化选项
+            // 使用与ConfigManager完全相同的序列化选项
             var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -332,10 +332,6 @@ namespace CodeUnfucker.Tests
                     BindingFlags.NonPublic | BindingFlags.Static);
                 formatterConfigField?.SetValue(null, null);
                 
-                var analyzerConfigField = configManagerType.GetField("_analyzerConfig", 
-                    BindingFlags.NonPublic | BindingFlags.Static);
-                analyzerConfigField?.SetValue(null, null);
-                
                 var usingRemoverConfigField = configManagerType.GetField("_usingRemoverConfig", 
                     BindingFlags.NonPublic | BindingFlags.Static);
                 usingRemoverConfigField?.SetValue(null, null);
@@ -352,7 +348,6 @@ namespace CodeUnfucker.Tests
                 
                 // 再次重置缓存对象确保完全清空
                 formatterConfigField?.SetValue(null, null);
-                analyzerConfigField?.SetValue(null, null);
                 usingRemoverConfigField?.SetValue(null, null);
                 
                 // 强制垃圾回收，确保没有残留的对象引用

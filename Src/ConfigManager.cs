@@ -63,6 +63,15 @@ namespace CodeUnfucker
             try
             {
                 string configFile = Path.Combine(ConfigPath, fileName);
+                // --- 调试输出 ---
+                Console.WriteLine($"[DEBUG] ConfigPath: {ConfigPath}");
+                Console.WriteLine($"[DEBUG] Looking for config file: {configFile}");
+                if (File.Exists(configFile))
+                    Console.WriteLine($"[DEBUG] Config file content: {File.ReadAllText(configFile)}");
+                else
+                    Console.WriteLine("[DEBUG] Config file does not exist!");
+                // --- 调试输出结束 ---
+
                 if (!File.Exists(configFile))
                 {
                     Console.WriteLine($"[WARN] 配置文件不存在: {configFile}，使用默认配置");
