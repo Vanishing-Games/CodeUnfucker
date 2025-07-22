@@ -29,10 +29,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Compile Remove="Tests.Project/**/*.cs" />
-    <EmbeddedResource Remove="Tests.Project/**/*.cs" />
-    <None Remove="Tests.Project/**/*.cs" />
-    <Compile Remove="TestData/**/*.cs" />
-    <EmbeddedResource Remove="TestData/**/*.cs" />
+    <Compile Remove="Tests/Tests.Project/**/*.cs" />
+    <EmbeddedResource Remove="Tests/Tests.Project/**/*.cs" />
+    <None Remove="Tests/Tests.Project/**/*.cs" />
+    <Compile Remove="Tests/Data/**/*.cs" />
+    <EmbeddedResource Remove="Tests/Data/**/*.cs" />
   </ItemGroup>
 </Project>

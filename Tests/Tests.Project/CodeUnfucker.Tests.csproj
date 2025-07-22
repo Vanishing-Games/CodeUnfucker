@@ -24,16 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../CodeUnfucker.csproj" />
+    <ProjectReference Include="../../CodeUnfucker.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- 排除可能干扰测试的配置文件，只包含测试数据 -->
-    <None Include="../TestData/**/*.json" Exclude="../TestData/**/TestFormatterConfig.json;../TestData/**/TestAnalyzerConfig.json">
+    <None Include="../Data/**/*.json" Exclude="../Data/**/TestFormatterConfig.json;../Data/**/TestAnalyzerConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>TestData/%(RecursiveDir)%(Filename)%(Extension)</Link>
     </None>
-    <Content Include="../TestData/**/*.cs">
+    <Content Include="../Data/**/*.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>TestData/%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Content>

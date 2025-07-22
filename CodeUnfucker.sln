@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeUnfucker", "CodeUnfucker.csproj", "{005BC340-975F-46B4-93F8-11FE56BD8556}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeUnfucker.Tests", "Tests.Project\CodeUnfucker.Tests.csproj", "{18ABEC50-2681-40E4-A247-893B5C4D8A7E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeUnfucker.Tests", "Tests/Tests.Project/CodeUnfucker.Tests.csproj", "{18ABEC50-2681-40E4-A247-893B5C4D8A7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
