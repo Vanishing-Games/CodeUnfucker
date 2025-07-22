@@ -13,3 +13,5 @@
 *.swp
 *.bak
 *.ncrunch*
+/Tests/Tests.Project/bin/
+/Tests/Tests.Project/obj/
