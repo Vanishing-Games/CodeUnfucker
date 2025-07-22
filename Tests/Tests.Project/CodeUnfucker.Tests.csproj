@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../CodeUnfucker.csproj" />
+    <ProjectReference Include="../../CodeUnfucker.csproj" />
   </ItemGroup>
 
   <ItemGroup>
