@@ -1,3 +1,15 @@
 /.idea/
 /bin/
 /obj/
+/TestResults/
+/coverage/
+/.vs/
+/.vscode/
+*.user
+*.suo
+*.log
+*.tmp
+*.DS_Store
+*.swp
+*.bak
+*.ncrunch*
