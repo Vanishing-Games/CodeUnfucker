@@ -40,22 +40,194 @@ dotnet run -- --help
 - `rmusing <path>`: 移除未使用的using语句
 - `roslynator <path>`: 使用Roslynator进行代码重构
 
+## format 与 roslynator 的区别
+
+- `format`（内置格式化器）：
+  - 主要用于统一代码风格、结构和分区。
+  - 支持自动分组成员（public/protected/private/Unity生命周期/变量/嵌套类），可按配置插入#region分区。
+  - 可根据配置自动备份原文件。
+  - 格式化时会保留注释、XML文档等原始信息。
+  - 支持切换为CSharpier格式化（通过配置）。
+  - 适合团队风格规范和结构统一。
+- `roslynator`：
+  - 主要用于自动化常见的代码重构和规范化（如加大括号、var转显式类型、条件表达式简化等）。
+  - 不会调整成员顺序或插入#region，仅做语法和风格层面的重构。
+  - 会为每个文件生成`.roslynator.backup`备份。
+  - 适合批量消除低级错误和提升代码规范性。
+
+## format 功能详细说明
+
+- 递归扫描指定C#文件或目录，使用内置格式化器（CodeFormatter）对代码进行格式化。
+- 支持自动分组成员（如public/protected/private/Unity生命周期/变量/嵌套类），可按配置自动插入#region分区。
+- 可根据配置自动备份原文件。
+- 格式化时会保留注释、XML文档等原始信息。
+- 支持切换为CSharpier格式化（通过配置）。
+- 适合统一代码风格、结构、分区，提升可读性和一致性。
+
 ## 功能示例
 
-### 1. 代码格式化
+### 1. 代码格式化（真实效果）
 **处理前：**
 ```csharp
-public   class  Demo{public void Test( ) {Console.WriteLine("Hello" );}}
+using System;
+
+public class SampleClass
+{
+    private int privateField;
+    public string PublicProperty { get; set; } = string.Empty;
+    protected bool protectedField;
+
+    public void PublicMethod()
+    {
+        Console.WriteLine("Public method");
+    }
+
+    private void Start()
+    {
+        Console.WriteLine("Start");
+    }
+
+    private void Update()
+    {
+        // Update logic
+    }
+
+    protected virtual void ProtectedMethod()
+    {
+        // Protected method
+    }
+
+    private void PrivateMethod()
+    {
+        // Private method
+    }
+
+    public class NestedClass
+    {
+        public void NestedMethod() { }
+    }
+
+    private void Awake()
+    {
+        Console.WriteLine("Awake");
+    }
+
+    public SampleClass()
+    {
+        privateField = 0;
+    }
+} 
 ```
 **处理后：**
 ```csharp
-public class Demo
+using System;
+
+public class SampleClass
 {
-    public void Test()
+    public void PublicMethod()
     {
-        Console.WriteLine("Hello");
+        Console.WriteLine("Public method");
     }
-}
+
+    public SampleClass()
+    {
+        privateField = 0;
+    }
+
+    #region Unity LifeCycle
+
+    private void Start()
+    {
+        Console.WriteLine("Start");
+    }
+
+    private void Update()
+    {
+        // Update logic
+    }
+
+    private void Awake()
+    {
+        Console.WriteLine("Awake");
+    }
+
+    #endregion
+
+    protected virtual void ProtectedMethod()
+    {
+        // Protected method
+    }
+
+    private void PrivateMethod()
+    {
+        // Private method
+    }
+
+    public class NestedClass
+    {
+        public void NestedMethod() { }
+    }
+    private int privateField;
+    public string PublicProperty { get; set; } = string.Empty;
+    protected bool protectedField;
+} 
+```
+
+### 2. Roslynator重构（真实效果）
+**处理前/处理后：**
+（本例未发生变化，因代码已规范）
+```csharp
+using System;
+
+public class SampleClass
+{
+    public void PublicMethod()
+    {
+        Console.WriteLine("Public method");
+    }
+
+    public SampleClass()
+    {
+        privateField = 0;
+    }
+
+    #region Unity LifeCycle
+
+    private void Start()
+    {
+        Console.WriteLine("Start");
+    }
+
+    private void Update()
+    {
+        // Update logic
+    }
+
+    private void Awake()
+    {
+        Console.WriteLine("Awake");
+    }
+
+    #endregion
+
+    protected virtual void ProtectedMethod()
+    {
+        // Protected method
+    }
+
+    private void PrivateMethod()
+    {
+        // Private method
+    }
+
+    public class NestedClass
+    {
+        public void NestedMethod() { }
+    }
+    private int privateField;
+    public string PublicProperty { get; set; } = string.Empty;
+    protected bool protectedField;
+} 
 ```
 
 ### 2. 移除未使用的using
