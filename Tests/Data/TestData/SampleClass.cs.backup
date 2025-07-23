@@ -2,21 +2,16 @@ using System;
 
 public class SampleClass
 {
+    private int privateField;
+    public string PublicProperty { get; set; } = string.Empty;
+    protected bool protectedField;
 
     public void PublicMethod()
     {
         Console.WriteLine("Public method");
     }
 
-    public SampleClass()
-    {
-        privateField = 0;
-    }
-
-    
-        #region Unity LifeCycle
-
-private void Start()
+    private void Start()
     {
         Console.WriteLine("Start");
     }
@@ -25,13 +20,6 @@ private void Start()
     {
         // Update logic
     }
-
-    private void Awake()
-    {
-        Console.WriteLine("Awake");
-    }
-
-        #endregion
 
     protected virtual void ProtectedMethod()
     {
@@ -47,7 +35,14 @@ private void Start()
     {
         public void NestedMethod() { }
     }
-    private int privateField;
-    public string PublicProperty { get; set; } = string.Empty;
-    protected bool protectedField;
+
+    private void Awake()
+    {
+        Console.WriteLine("Awake");
+    }
+
+    public SampleClass()
+    {
+        privateField = 0;
+    }
 } 
